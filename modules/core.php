@@ -59,11 +59,13 @@ class Core {
 		$_SERVER['PHP_SELF'] = $PHP_SELF = preg_replace( '/(\?.*)?$/', '', $_SERVER['REQUEST_URI'] );
 
 		add_filter( 'got_rewrite', '__return_true', self::LOW_PRIORITY );
-		add_filter( 'secure_auth_redirect', '__return_true' );
-		force_ssl_admin( true );
-
-		defined( 'DISALLOW_FILE_EDIT' ) or define( 'DISALLOW_FILE_EDIT', true );
-		defined( 'DISALLOW_FILE_MODS' ) or define( 'DISALLOW_FILE_MODS', true );
+		if( is_production() ) {
+			add_filter( 'secure_auth_redirect', '__return_true' );
+			force_ssl_admin( true );
+			
+			defined( 'DISALLOW_FILE_EDIT' ) or define( 'DISALLOW_FILE_EDIT', true );
+			defined( 'DISALLOW_FILE_MODS' ) or define( 'DISALLOW_FILE_MODS', true );
+		}
 		defined( 'DISABLE_WP_CRON' ) or define( 'DISABLE_WP_CRON', true );
 
 		// ::settings_link() takes 2 parameters
