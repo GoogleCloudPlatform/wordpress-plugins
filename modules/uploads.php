@@ -295,9 +295,12 @@ class Uploads {
 	protected static function get_wrapped_url( $url ) {
 		$options = [
 			'gs_bucket_name' => get_option( 'appengine_uploads_bucket', '' ),
-			'max_bytes_per_blob' => wp_max_upload_size(),
 		];
-
+		$wp_maxupsize = wp_max_upload_size();
+		// set max_bytes_per_blob option only if max upload size is a positive int
+		if (is_int($wp_maxupsize) && $wp_maxupsize > 0) {
+			$options['max_bytes_per_blob'] = $wp_maxupsize;
+		}
 		// Setup internal authentication
 		$sign_result = AppIdentityService::signForApp( AUTH_KEY . get_current_user_id() );
 		$url = add_query_arg( 'gae_auth_user', get_current_user_id(), $url );
