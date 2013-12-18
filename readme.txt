@@ -77,11 +77,20 @@ the cache, so if you want to use comments on a fully-cached site, we recommend
 
 == Changelog ==
 
+= 1.1 =
+* Fix uploads issue on the development server where PyCrypto is not available.
+* include 'max_bytes_per_blob' in createUploadUrl options only if wp_max_upload_size() is a positive int
+* Remove writable bucket check work around is this is now natively supported.
+
 = 1.0 =
 * Initial release
 
 
 == Upgrade Notice ==
+= 1.1 =
+* Fix uploads issue on the development server where PyCrypto is not available.
+* include 'max_bytes_per_blob' in createUploadUrl options only if wp_max_upload_size() is a positive int
+* Remove writable bucket check work around is this is now natively supported.
 
 = 1.0 =
 This version is the initial release of Google App Engine for WordPress.

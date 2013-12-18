@@ -150,7 +150,7 @@ class Uploads {
 		}
 
 		$user_id     = absint( $_GET['gae_auth_user'] );
-		$sign_result = AppIdentityService::signForApp( AUTH_KEY . $user_id );
+		$sign_result = self::sign_auth_key( AUTH_KEY . $user_id );
 
 		if ( $sign_result['key_name'] !== $_GET['gae_auth_key'] ) {
 			return $user;
@@ -302,7 +302,7 @@ class Uploads {
 			$options['max_bytes_per_blob'] = $wp_maxupsize;
 		}
 		// Setup internal authentication
-		$sign_result = AppIdentityService::signForApp( AUTH_KEY . get_current_user_id() );
+		$sign_result = self::sign_auth_key( AUTH_KEY . get_current_user_id() );
 		$url = add_query_arg( 'gae_auth_user', get_current_user_id(), $url );
 		$url = add_query_arg( 'gae_auth_key', $sign_result['key_name'], $url );
 		$url = add_query_arg( 'gae_auth_signature', urlencode( base64_encode( $sign_result['signature'] ) ), $url );
@@ -447,6 +447,23 @@ class Uploads {
 		return is_array( self::$image_sizes ) ? self::$image_sizes : array();
 	}
 
+  private static function is_production() {
+    return isset( $_SERVER['SERVER_SOFTWARE'] ) && strpos( $_SERVER['SERVER_SOFTWARE'], 'Google App Engine' ) !== false;
+  }
+
+  private static function sign_auth_key($auth_key) {
+    if (self::is_production()) {
+      return AppIdentityService::signForApp($auth_key);
+    } else {
+      // In the development server we are not concerned with trying to generate
+      // a secure signature.
+      return [
+        'key_name' => 'development_hash',
+        'signature' => sha1($auth_key),
+      ];
+    }
+  }
+
 	public static function custom_image_editor( $editors ) {
 		$editors = [ __NAMESPACE__ . '\\Editor' ] + $editors;
 		return $editors;
@@ -571,7 +588,7 @@ class Admin {
 			return CloudStorageTools::getDefaultGoogleStorageBucketName();
 		}
 
-		if ( !file_exists( 'gs://' . $input ) || ! self::bucket_is_writable( $input ) ) {
+		if ( !file_exists( 'gs://' . $input ) || ! is_writable( 'gs://' . $input ) ) {
 			add_settings_error( 'appengine_settings', 'invalid-bucket', __( 'You have entered an invalid bucket name, or the bucket is not writable.', 'appengine' ) );
 		}
 
@@ -586,27 +603,5 @@ class Admin {
 
 		$default = CloudStorageTools::getDefaultGoogleStorageBucketName();
 		update_option( 'appengine_uploads_bucket', $default );
-	}
-
-	/**
-	 * Workaround for Windows bug in is_writable() function
-	 *
-	 * @since 2.8.0
-	 *
-	 * @param string $path
-	 * @return bool
-	 */
-	public static function bucket_is_writable( $bucket ) {
-		$path = 'gs://' . $bucket . '/wordpress-write-check.tmp';
-
-		// check tmp file for read/write capabilities
-		$f = fopen( $path, 'w' );
-		if ( $f === false ) {
-			return false;
-		}
-
-		fclose( $f );
-		unlink( $path );
-		return true;
 	}
 }
