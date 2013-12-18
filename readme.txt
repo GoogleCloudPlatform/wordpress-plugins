@@ -2,8 +2,8 @@
 Contributors: google, sennza
 Tags: google, app engine, gae, mail, email, uploads, uploading, cloud storage
 Requires at least: 3.5
-Tested up to: 3.6
-Stable tag: 1.0
+Tested up to: 3.8
+Stable tag: 1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
