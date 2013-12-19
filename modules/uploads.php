@@ -588,9 +588,21 @@ class Admin {
 			return CloudStorageTools::getDefaultGoogleStorageBucketName();
 		}
 
-		if ( !file_exists( 'gs://' . $input ) || ! is_writable( 'gs://' . $input ) ) {
-			add_settings_error( 'appengine_settings', 'invalid-bucket', __( 'You have entered an invalid bucket name, or the bucket is not writable.', 'appengine' ) );
-		}
+    $bucket_name = 'gs://' . $input;
+    $valid_bucket_name = false;
+    // In the devappserver there is a chicken and egg problem with bucket
+    // creation - so we need to special case this check for the time being.
+    if ( self::is_production() ) {
+      if ( !file_exists( $bucket_name ) || ! is_writable( $bucket_name ) ) {
+        $valid_bucket_name = false;
+      }
+    } else {
+      $valid_bucket_name = self::bucket_is_writable($bucket_name);
+    }
+
+    if (!$valid_bucket_name) {
+      add_settings_error( 'appengine_settings', 'invalid-bucket', __( 'You have entered an invalid bucket name, or the bucket is not writable.', 'appengine' ) );
+    }
 
 		return $input;
 	}
@@ -604,4 +616,31 @@ class Admin {
 		$default = CloudStorageTools::getDefaultGoogleStorageBucketName();
 		update_option( 'appengine_uploads_bucket', $default );
 	}
+
+  /**
+   * Workaround for Windows bug in is_writable() function
+   *
+   * @since 2.8.0
+   *
+   * @param string $path
+   * @return bool
+   */
+  public static function bucket_is_writable( $bucket ) {
+    $path = $bucket . '/wordpress-write-check.tmp';
+
+    // check tmp file for read/write capabilities
+    $f = fopen( $path, 'w' );
+    if ( $f === false ) {
+      return false;
+    }
+
+    fclose( $f );
+    unlink( $path );
+    return true;
+  }
+
+  // TODO(slangley): Yikes!!! Cleanup with common method.
+  private static function is_production() {
+    return isset( $_SERVER['SERVER_SOFTWARE'] ) && strpos( $_SERVER['SERVER_SOFTWARE'], 'Google App Engine' ) !== false;
+  }
 }
