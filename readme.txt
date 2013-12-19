@@ -19,6 +19,7 @@ This plugin adds overrides to core functionality in WordPress to use App Engine
 infrastructure, such as the Mail functionality, and uploading media to Google
 Cloud Storage
 
+= Note: This plugin is designed to be used with Google App Engine only and will not work with any other hosting. = 
 
 == Installation ==
 
