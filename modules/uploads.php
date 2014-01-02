@@ -358,8 +358,12 @@ class Uploads {
 
 		if ( empty( $baseurl ) || $cached_file !== $file ) {
 			try {
-				$baseurl = CloudStorageTools::getImageServingUrl( $file, [ 'size' => null ] );
-
+				if (self::is_production()) {
+					$baseurl = CloudStorageTools::getImageServingUrl( $file, [ 'size' => null ] );
+				}
+				else {  // development server
+					$baseurl = CloudStorageTools::getPublicUrl($file, true);
+				}
 				update_post_meta( $id, '_appengine_imageurl', $baseurl );
 				update_post_meta( $id, '_appengine_imageurl_file', $file );
 			}
@@ -374,14 +378,16 @@ class Uploads {
 
 		$url = $baseurl;
 
-		if ( ! is_null( $options['size'] ) ) {
-			$url .= ( '=s' . $options['size'] );
-			if ( $options['crop'] ) {
-				$url .= '-c';
+		if (self::is_production()) {
+			if ( ! is_null( $options['size'] ) ) {
+				$url .= ( '=s' . $options['size'] );
+				if ( $options['crop'] ) {
+					$url .= '-c';
+				}
 			}
-		}
-		else {
-			$url .= '=s0';
+			else {
+				$url .= '=s0';
+			}
 		}
 
 		$data = [
@@ -639,7 +645,7 @@ class Admin {
     return true;
   }
 
-  // TODO(slangley): Yikes!!! Cleanup with common method.
+  // TODO: Cleanup with common method.
   private static function is_production() {
     return isset( $_SERVER['SERVER_SOFTWARE'] ) && strpos( $_SERVER['SERVER_SOFTWARE'], 'Google App Engine' ) !== false;
   }
