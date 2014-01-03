@@ -359,7 +359,7 @@ class Uploads {
 		if ( empty( $baseurl ) || $cached_file !== $file ) {
 			try {
 				if (self::is_production()) {
-					$baseurl = CloudStorageTools::getImageServingUrl( $file, [ 'size' => null ] );
+					$baseurl = CloudStorageTools::getImageServingUrl($file);
 				}
 				// If running on the development server, use getPublicUrl() instead
 				// of getImageServingUrl().
