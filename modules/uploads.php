@@ -361,7 +361,12 @@ class Uploads {
 				if (self::is_production()) {
 					$baseurl = CloudStorageTools::getImageServingUrl( $file, [ 'size' => null ] );
 				}
-				else {  // development server
+				// If running on the development server, use getPublicUrl() instead
+				// of getImageServingUrl().
+				// This removes the requirement for the Python PIL library to be installed
+				// in the development environment.
+				// TODO: this is a temporary modification.
+				else {
 					$baseurl = CloudStorageTools::getPublicUrl($file, true);
 				}
 				update_post_meta( $id, '_appengine_imageurl', $baseurl );
@@ -378,6 +383,9 @@ class Uploads {
 
 		$url = $baseurl;
 
+		// Only append image options to the URL if we're running in production,
+		// since in the development context getPublicUrl() is currently used to
+		// generate the URL.
 		if (self::is_production()) {
 			if ( ! is_null( $options['size'] ) ) {
 				$url .= ( '=s' . $options['size'] );
