@@ -358,8 +358,17 @@ class Uploads {
 
 		if ( empty( $baseurl ) || $cached_file !== $file ) {
 			try {
-				$baseurl = CloudStorageTools::getImageServingUrl( $file, [ 'size' => null ] );
-
+				if (self::is_production()) {
+					$baseurl = CloudStorageTools::getImageServingUrl($file);
+				}
+				// If running on the development server, use getPublicUrl() instead
+				// of getImageServingUrl().
+				// This removes the requirement for the Python PIL library to be installed
+				// in the development environment.
+				// TODO: this is a temporary modification.
+				else {
+					$baseurl = CloudStorageTools::getPublicUrl($file, true);
+				}
 				update_post_meta( $id, '_appengine_imageurl', $baseurl );
 				update_post_meta( $id, '_appengine_imageurl_file', $file );
 			}
@@ -374,14 +383,19 @@ class Uploads {
 
 		$url = $baseurl;
 
-		if ( ! is_null( $options['size'] ) ) {
-			$url .= ( '=s' . $options['size'] );
-			if ( $options['crop'] ) {
-				$url .= '-c';
+		// Only append image options to the URL if we're running in production,
+		// since in the development context getPublicUrl() is currently used to
+		// generate the URL.
+		if (self::is_production()) {
+			if ( ! is_null( $options['size'] ) ) {
+				$url .= ( '=s' . $options['size'] );
+				if ( $options['crop'] ) {
+					$url .= '-c';
+				}
 			}
-		}
-		else {
-			$url .= '=s0';
+			else {
+				$url .= '=s0';
+			}
 		}
 
 		$data = [
@@ -639,7 +653,7 @@ class Admin {
     return true;
   }
 
-  // TODO(slangley): Yikes!!! Cleanup with common method.
+  // TODO: Cleanup with common method.
   private static function is_production() {
     return isset( $_SERVER['SERVER_SOFTWARE'] ) && strpos( $_SERVER['SERVER_SOFTWARE'], 'Google App Engine' ) !== false;
   }
