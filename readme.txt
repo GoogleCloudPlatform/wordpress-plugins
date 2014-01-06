@@ -3,7 +3,7 @@ Contributors: google, sennza
 Tags: google, app engine, gae, mail, email, uploads, uploading, cloud storage
 Requires at least: 3.5
 Tested up to: 3.8
-Stable tag: 1.1
+Stable tag: 1.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -78,6 +78,11 @@ the cache, so if you want to use comments on a fully-cached site, we recommend
 
 == Changelog ==
 
+= 1.2 =
+* Use CloudStorageTools::getPublicUrl in the dev environment so PIL is not a requirement.
+* Fix Readme file to highlight that the plugin is for Google App Engine only.
+* Work around is_writable check in the development environment.
+
 = 1.1 =
 * Fix uploads issue on the development server where PyCrypto is not available.
 * include 'max_bytes_per_blob' in createUploadUrl options only if wp_max_upload_size() is a positive int
@@ -88,6 +93,11 @@ the cache, so if you want to use comments on a fully-cached site, we recommend
 
 
 == Upgrade Notice ==
+
+= 1.2 =
+* Use CloudStorageTools::getPublicUrl in the dev environment so PIL is not a requirement.
+* Work around is_writable check in the development environment.
+
 = 1.1 =
 * Fix uploads issue on the development server where PyCrypto is not available.
 * include 'max_bytes_per_blob' in createUploadUrl options only if wp_max_upload_size() is a positive int

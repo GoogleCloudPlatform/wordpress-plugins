@@ -3,7 +3,7 @@
 Plugin Name: Google App Engine for WordPress
 Plugin URI: http://developers.google.com/appengine/
 Description: Optimize your WordPress installation for Google App Engine
-Version: 1.1
+Version: 1.2
 Author: Google
 Author URI: http://developers.google.com/appengine/
 License: GPL2
