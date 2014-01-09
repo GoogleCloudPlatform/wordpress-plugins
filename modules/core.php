@@ -68,13 +68,16 @@ class Core {
 		}
 		defined( 'DISABLE_WP_CRON' ) or define( 'DISABLE_WP_CRON', true );
 
+    // We don't want to use fsockopen as on App Engine it's not efficient
+    add_filter( 'use_fsockopen_transport', '__return_false' );
+
 		// ::settings_link() takes 2 parameters
 		add_filter( 'plugin_action_links', __CLASS__ . '::settings_link', self::NORMAL_PRIORITY, 2 );
 		add_action( 'admin_enqueue_scripts', __CLASS__ . '::register_styles' );
 		add_action( 'admin_menu', __CLASS__ . '::register_settings_page' );
 		add_action( 'admin_init', __CLASS__ . '::register_settings' );
-
 		add_action( 'init', __CLASS__ . '::load_textdomain' );
+
 	}
 
 	/**

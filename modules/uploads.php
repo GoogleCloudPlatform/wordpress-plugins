@@ -292,7 +292,7 @@ class Uploads {
 	 * @param string $url
 	 * @return string Wrapped URL
 	 */
-	protected static function get_wrapped_url( $url ) {
+	public static function get_wrapped_url( $url ) {
 		$options = [
 			'gs_bucket_name' => get_option( 'appengine_uploads_bucket', '' ),
 		];
@@ -603,11 +603,11 @@ class Admin {
 		}
 
     $bucket_name = 'gs://' . $input;
-    $valid_bucket_name = false;
+    $valid_bucket_name = true;
     // In the devappserver there is a chicken and egg problem with bucket
     // creation - so we need to special case this check for the time being.
     if ( self::is_production() ) {
-      if ( !file_exists( $bucket_name ) || ! is_writable( $bucket_name ) ) {
+      if (!file_exists( $bucket_name ) || !is_writable( $bucket_name ) ) {
         $valid_bucket_name = false;
       }
     } else {

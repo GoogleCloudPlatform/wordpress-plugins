@@ -73,4 +73,7 @@ if ( $modules_dir = @ opendir( __DIR__ . '/modules/' ) ) {
 	}
 }
 
+// Include the App Engine specific WordPress importer.
+require_once __DIR__ . '/importer/wordpress-importer.php';
+
 register_activation_hook( __FILE__, __NAMESPACE__ . '\\activation' );

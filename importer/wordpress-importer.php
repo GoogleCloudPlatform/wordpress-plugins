@@ -1,20 +1,24 @@
 <?php
-/*
-Plugin Name: WordPress Importer
-Plugin URI: http://wordpress.org/extend/plugins/wordpress-importer/
-Description: Import posts, pages, comments, custom fields, categories, tags and more from a WordPress export file.
-Author: wordpressdotorg
-Author URI: http://wordpress.org/
-Version: 0.6.1
-Text Domain: wordpress-importer
-License: GPL version 2 or later - http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-*/
+/**
+ * App Engine WordPress Importer module.
+ *
+ * Forked from the WordPress Importer plugin (http://wordpress.org/extend/plugins/wordpress-importer/)
+ * with the following modifications:
+ * - Use Google Cloud Storage to upload the import file to, and process if from
+ *   there.
+ * - Use task queues to ensure to work around the 60 second request limit for
+ *   a front end App Engine request.
+ */
+
+namespace google\appengine\WordPress\importer;
+
+use google\appengine\WordPress\Uploads\Uploads as Uploads;
 
 if ( ! defined( 'WP_LOAD_IMPORTERS' ) )
 	return;
 
 /** Display verbose errors */
-define( 'IMPORT_DEBUG', false );
+define( 'APP_ENGINE_IMPORT_DEBUG', true );
 
 // Load Importer API
 require_once ABSPATH . 'wp-admin/includes/import.php';
@@ -34,8 +38,8 @@ require dirname( __FILE__ ) . '/parsers.php';
  * @package WordPress
  * @subpackage Importer
  */
-if ( class_exists( 'WP_Importer' ) ) {
-class WP_Import extends WP_Importer {
+if ( class_exists( '\WP_Importer' ) ) {
+class WP_Import extends \WP_Importer {
 	var $max_wxr_version = 1.2; // max. supported WXR version
 
 	var $id; // WXR attachment ID
@@ -71,6 +75,9 @@ class WP_Import extends WP_Importer {
 	 * Manages the three separate stages of the WXR import process
 	 */
 	function dispatch() {
+
+    syslog(LOG_DEBUG, 'Calling dispatch() ' . __FILE__ . ':' . __LINE__);
+
 		$this->header();
 
 		$step = empty( $_GET['step'] ) ? 0 : (int) $_GET['step'];
@@ -86,9 +93,8 @@ class WP_Import extends WP_Importer {
 			case 2:
 				check_admin_referer( 'import-wordpress' );
 				$this->fetch_attachments = ( ! empty( $_POST['fetch_attachments'] ) && $this->allow_fetch_attachments() );
-				$this->id = (int) $_POST['import_id'];
-				$file = get_attached_file( $this->id );
-				set_time_limit(0);
+				$this->gcs_filename = $_POST['import_gcs_name'];
+				$file = html_entity_decode($this->gcs_filename);
 				$this->import( $file );
 				break;
 		}
@@ -103,7 +109,6 @@ class WP_Import extends WP_Importer {
 	 */
 	function import( $file ) {
 		add_filter( 'import_post_meta_key', array( $this, 'is_valid_meta_key' ) );
-		add_filter( 'http_request_timeout', array( &$this, 'bump_request_timeout' ) );
 
 		$this->import_start( $file );
 
@@ -164,7 +169,6 @@ class WP_Import extends WP_Importer {
 	 * Performs post-import cleanup of files and the cache
 	 */
 	function import_end() {
-		wp_import_cleanup( $this->id );
 
 		wp_cache_flush();
 		foreach ( get_taxonomies() as $tax ) {
@@ -181,6 +185,27 @@ class WP_Import extends WP_Importer {
 		do_action( 'import_end' );
 	}
 
+  function check_supplied_filename() {
+    if ( !isset($_POST['filename']) || strlen($_POST['filename']) == 0) {
+      $file['error'] = __( 'No filename supplied - Please specify a Google Cloud Storage filename in the format "gs://bucket_name/file_name"' );
+      return $file;
+    }
+
+    $filename = $_POST['filename'];
+    if (strpos($filename, 'gs://') !== 0) {
+      $file['error'] = __( 'Invalid filename - Please specify a Google Cloud Storage filename in the format "gs://bucket_name/file_name"' );
+      return $file;
+    }
+
+    if (!is_readable($filename)) {
+      $file['error'] = __( 'Unable to read from supplied file ' . $filename );
+      return $file;
+    }
+
+    $file['file'] = $filename;
+
+    return $file;
+  }
 	/**
 	 * Handles the WXR upload and initial parsing of the file to prepare for
 	 * displaying author import options
@@ -188,7 +213,7 @@ class WP_Import extends WP_Importer {
 	 * @return bool False if error uploading or invalid file, true otherwise
 	 */
 	function handle_upload() {
-		$file = wp_import_handle_upload();
+    $file = $this->check_supplied_filename();
 
 		if ( isset( $file['error'] ) ) {
 			echo '<p><strong>' . __( 'Sorry, there has been an error.', 'wordpress-importer' ) . '</strong><br />';
@@ -201,7 +226,7 @@ class WP_Import extends WP_Importer {
 			return false;
 		}
 
-		$this->id = (int) $file['id'];
+		$this->gcs_filename = htmlentities($file['file']);
 		$import_data = $this->parse( $file['file'] );
 		if ( is_wp_error( $import_data ) ) {
 			echo '<p><strong>' . __( 'Sorry, there has been an error.', 'wordpress-importer' ) . '</strong><br />';
@@ -258,9 +283,9 @@ class WP_Import extends WP_Importer {
 	function import_options() {
 		$j = 0;
 ?>
-<form action="<?php echo admin_url( 'admin.php?import=wordpress&amp;step=2' ); ?>" method="post">
+<form action="<?php echo admin_url( 'admin.php?import=appengine&amp;step=2' ); ?>" method="post">
 	<?php wp_nonce_field( 'import-wordpress' ); ?>
-	<input type="hidden" name="import_id" value="<?php echo $this->id; ?>" />
+	<input type="hidden" name="import_gcs_name" value="<?php echo $this->gcs_filename; ?>" />
 
 <?php if ( ! empty( $this->authors ) ) : ?>
 	<h3><?php _e( 'Assign Authors', 'wordpress-importer' ); ?></h3>
@@ -372,8 +397,10 @@ class WP_Import extends WP_Importer {
 					$this->author_mapping[$santized_old_login] = $user_id;
 				} else {
 					printf( __( 'Failed to create new user for %s. Their posts will be attributed to the current user.', 'wordpress-importer' ), esc_html($this->authors[$old_login]['author_display_name']) );
-					if ( defined('IMPORT_DEBUG') && IMPORT_DEBUG )
+					if ( defined('APP_ENGINE_IMPORT_DEBUG') && APP_ENGINE_IMPORT_DEBUG ) {
+            syslog(LOG_DEBUG, $user_id->get_error_message());
 						echo ' ' . $user_id->get_error_message();
+          }
 					echo '<br />';
 				}
 			}
@@ -423,8 +450,11 @@ class WP_Import extends WP_Importer {
 					$this->processed_terms[intval($cat['term_id'])] = $id;
 			} else {
 				printf( __( 'Failed to import category %s', 'wordpress-importer' ), esc_html($cat['category_nicename']) );
-				if ( defined('IMPORT_DEBUG') && IMPORT_DEBUG )
+				if ( defined('APP_ENGINE_IMPORT_DEBUG') && APP_ENGINE_IMPORT_DEBUG ) {
+          syslog(LOG_DEBUG,
+                 $id->get_error_message() . ' ' . __FILE__ . ':' . __LINE__);
 					echo ': ' . $id->get_error_message();
+        }
 				echo '<br />';
 				continue;
 			}
@@ -463,7 +493,7 @@ class WP_Import extends WP_Importer {
 					$this->processed_terms[intval($tag['term_id'])] = $id['term_id'];
 			} else {
 				printf( __( 'Failed to import post tag %s', 'wordpress-importer' ), esc_html($tag['tag_name']) );
-				if ( defined('IMPORT_DEBUG') && IMPORT_DEBUG )
+				if ( defined('APP_ENGINE_IMPORT_DEBUG') && APP_ENGINE_IMPORT_DEBUG )
 					echo ': ' . $id->get_error_message();
 				echo '<br />';
 				continue;
@@ -509,7 +539,7 @@ class WP_Import extends WP_Importer {
 					$this->processed_terms[intval($term['term_id'])] = $id['term_id'];
 			} else {
 				printf( __( 'Failed to import %s %s', 'wordpress-importer' ), esc_html($term['term_taxonomy']), esc_html($term['term_name']) );
-				if ( defined('IMPORT_DEBUG') && IMPORT_DEBUG )
+				if ( defined('APP_ENGINE_IMPORT_DEBUG') && APP_ENGINE_IMPORT_DEBUG )
 					echo ': ' . $id->get_error_message();
 				echo '<br />';
 				continue;
@@ -617,7 +647,7 @@ class WP_Import extends WP_Importer {
 				if ( is_wp_error( $post_id ) ) {
 					printf( __( 'Failed to import %s &#8220;%s&#8221;', 'wordpress-importer' ),
 						$post_type_object->labels->singular_name, esc_html($post['post_title']) );
-					if ( defined('IMPORT_DEBUG') && IMPORT_DEBUG )
+					if ( defined('APP_ENGINE_IMPORT_DEBUG') && APP_ENGINE_IMPORT_DEBUG )
 						echo ': ' . $post_id->get_error_message();
 					echo '<br />';
 					continue;
@@ -650,7 +680,7 @@ class WP_Import extends WP_Importer {
 							do_action( 'wp_import_insert_term', $t, $term, $post_id, $post );
 						} else {
 							printf( __( 'Failed to import %s %s', 'wordpress-importer' ), esc_html($taxonomy), esc_html($term['name']) );
-							if ( defined('IMPORT_DEBUG') && IMPORT_DEBUG )
+							if ( defined('APP_ENGINE_IMPORT_DEBUG') && APP_ENGINE_IMPORT_DEBUG )
 								echo ': ' . $t->get_error_message();
 							echo '<br />';
 							do_action( 'wp_import_insert_term_failed', $t, $term, $post_id, $post );
@@ -849,7 +879,7 @@ class WP_Import extends WP_Importer {
 	 */
 	function process_attachment( $post, $url ) {
 		if ( ! $this->fetch_attachments )
-			return new WP_Error( 'attachment_processing_error',
+			return new \WP_Error( 'attachment_processing_error',
 				__( 'Fetching attachments is not enabled', 'wordpress-importer' ) );
 
 		// if the URL is absolute, but does not contain address, then upload it assuming base_site_url
@@ -863,7 +893,7 @@ class WP_Import extends WP_Importer {
 		if ( $info = wp_check_filetype( $upload['file'] ) )
 			$post['post_mime_type'] = $info['type'];
 		else
-			return new WP_Error( 'attachment_processing_error', __('Invalid file type', 'wordpress-importer') );
+			return new \WP_Error( 'attachment_processing_error', __('Invalid file type', 'wordpress-importer') );
 
 		$post['guid'] = $upload['url'];
 
@@ -899,7 +929,7 @@ class WP_Import extends WP_Importer {
 		// get placeholder file in the upload dir with a unique, sanitized filename
 		$upload = wp_upload_bits( $file_name, 0, '', $post['upload_date'] );
 		if ( $upload['error'] )
-			return new WP_Error( 'upload_dir_error', $upload['error'] );
+			return new \WP_Error( 'upload_dir_error', $upload['error'] );
 
 		// fetch the remote url and write it to the placeholder file
 		$headers = wp_get_http( $url, $upload['file'] );
@@ -907,31 +937,31 @@ class WP_Import extends WP_Importer {
 		// request failed
 		if ( ! $headers ) {
 			@unlink( $upload['file'] );
-			return new WP_Error( 'import_file_error', __('Remote server did not respond', 'wordpress-importer') );
+			return new \WP_Error( 'import_file_error', __('Remote server did not respond', 'wordpress-importer') );
 		}
 
 		// make sure the fetch was successful
 		if ( $headers['response'] != '200' ) {
 			@unlink( $upload['file'] );
-			return new WP_Error( 'import_file_error', sprintf( __('Remote server returned error response %1$d %2$s', 'wordpress-importer'), esc_html($headers['response']), get_status_header_desc($headers['response']) ) );
+			return new \WP_Error( 'import_file_error', sprintf( __('Remote server returned error response %1$d %2$s', 'wordpress-importer'), esc_html($headers['response']), get_status_header_desc($headers['response']) ) );
 		}
 
 		$filesize = filesize( $upload['file'] );
 
 		if ( isset( $headers['content-length'] ) && $filesize != $headers['content-length'] ) {
 			@unlink( $upload['file'] );
-			return new WP_Error( 'import_file_error', __('Remote file is incorrect size', 'wordpress-importer') );
+			return new \WP_Error( 'import_file_error', __('Remote file is incorrect size', 'wordpress-importer') );
 		}
 
 		if ( 0 == $filesize ) {
 			@unlink( $upload['file'] );
-			return new WP_Error( 'import_file_error', __('Zero size file downloaded', 'wordpress-importer') );
+			return new \WP_Error( 'import_file_error', __('Zero size file downloaded', 'wordpress-importer') );
 		}
 
 		$max_size = (int) $this->max_attachment_size();
 		if ( ! empty( $max_size ) && $filesize > $max_size ) {
 			@unlink( $upload['file'] );
-			return new WP_Error( 'import_file_error', sprintf(__('Remote file is too large, limit is %s', 'wordpress-importer'), size_format($max_size) ) );
+			return new \WP_Error( 'import_file_error', sprintf(__('Remote file is too large, limit is %s', 'wordpress-importer'), size_format($max_size) ) );
 		}
 
 		// keep track of the old and new urls so we can substitute them later
@@ -1052,12 +1082,65 @@ class WP_Import extends WP_Importer {
 	 */
 	function greet() {
 		echo '<div class="narrow">';
-		echo '<p>'.__( 'Howdy! Upload your WordPress eXtended RSS (WXR) file and we&#8217;ll import the posts, pages, comments, custom fields, categories, and tags into this site.', 'wordpress-importer' ).'</p>';
-		echo '<p>'.__( 'Choose a WXR (.xml) file to upload, then click Upload file and import.', 'wordpress-importer' ).'</p>';
-		wp_import_upload_form( 'admin.php?import=wordpress&amp;step=1' );
+		echo '<p>'.__('Supply your WordPress eXtended RSS (WXR) file and we&#8217;ll import the posts, pages, comments, custom fields, categories, and tags into this site.', 'wordpress-importer' ).'</p>';
+    echo '<p>'.__('Copy your WXR (.xml) file to your Google Cloud Storage bucket, provide the path below and click import to start the import.',
+        'wordpress-importer').'</p>';
+		$this->wp_import_upload_form( admin_url('admin.php?import=appengine&step=1') );
 		echo '</div>';
 	}
 
+  /**
+   * The builtin function wp_import_upload_form is not plugable - so we
+   * re-implement it here to use App Engine upload URLs and alter how the nonce
+   * works to support App Engine uploads.
+   */
+  private function wp_import_upload_form( $action ) {
+    // We cannot use wp_nonce_url as it escapes the & and we don't want that
+    $action = add_query_arg('_wpnonce', wp_create_nonce('import-upload'), $action);
+    $bucket_name = get_option('appengine_uploads_bucket', '');
+
+    if ($bucket_name) {
+      echo '<p>'.__(
+          'Your application is configured to use the Cloud Storage Bucket ',
+          'wordpress-importer') . $bucket_name . '</p>';
+    } else {
+      echo '<p>'.__(
+          'Your application does not have a default Cloud Storage Bucket',
+          'wordpress-importer').'</p>';
+    }
+    ?>
+    <form id="gae-import-upload-form" method="post" class="gae-wp-upload-form" action="<?php echo esc_url($action); ?>">
+      <p>
+        <label for="gcs_file"><?php _e('Enter path to a file located on Google Cloud Storage (e.g. "gs://my_bucket/import.xml"):');?></label>
+        <input type="text" id="gcs_file" name="filename" size="25" value="gs://<?php if ($bucket_name) echo $bucket_name .'/'; ?>" />
+      </p>
+      <?php \submit_button(__('Import from specified file', 'button')); ?>
+    </form>
+    <?php
+  }
+
+/*
+
+   if (empty($bucket_name)) {
+      ?><div class="error"><p><?php _e('Before you can upload your import file, you will need to fix the following error:'); ?></p>
+      <p><strong><?php echo 'Google Cloud Storage bucket name has not been configured.'; ?></strong></p></div><?php
+    } else {
+      $upload_url = Uploads::get_wrapped_url($action);
+      $size = size_format( $bytes );
+      ?>
+      <form enctype="multipart/form-data" id="import-upload-form" method="post" class="wp-upload-form" action="<?php echo esc_url( $upload_url ); ?>">
+        <p>
+          <label for="upload"><?php _e( 'Choose a file from your computer:' ); ?></label> (<?php printf( __('Maximum size: %s' ), $size ); ?>)
+          <input type="file" id="upload" name="import" size="25" />
+          <input type="hidden" name="action" value="save" />
+          <input type="hidden" name="max_file_size" value="<?php echo $bytes; ?>" />
+        </p>
+        <?php \submit_button( __('Upload file and import'), 'button' ); ?>
+      </form>
+    <?php
+    }
+  }
+*/
 	/**
 	 * Decide if the given meta key maps to information we will want to import
 	 *
@@ -1103,14 +1186,6 @@ class WP_Import extends WP_Importer {
 		return apply_filters( 'import_attachment_size_limit', 0 );
 	}
 
-	/**
-	 * Added to http_request_timeout filter to force timeout at 60 seconds during import
-	 * @return int 60
-	 */
-	function bump_request_timeout() {
-		return 60;
-	}
-
 	// return the difference in length between two strings
 	function cmpr_strlen( $a, $b ) {
 		return strlen($b) - strlen($a);
@@ -1120,13 +1195,21 @@ class WP_Import extends WP_Importer {
 } // class_exists( 'WP_Importer' )
 
 function wordpress_importer_init() {
-	load_plugin_textdomain( 'wordpress-importer', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+	// TODO(slangley): Do we need this?
+  // load_plugin_textdomain( 'wordpress-importer', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 
 	/**
 	 * WordPress Importer object for registering the import callback
 	 * @global WP_Import $wp_import
 	 */
-	$GLOBALS['wp_import'] = new WP_Import();
-	register_importer( 'wordpress', 'WordPress', __('Import <strong>posts, pages, comments, custom fields, categories, and tags</strong> from a WordPress export file.', 'wordpress-importer'), array( $GLOBALS['wp_import'], 'dispatch' ) );
+	$GLOBALS['gae_wp_import'] = new WP_Import();
+	register_importer(
+      'appengine',
+      'Google App Engine',
+      __('Import <strong>posts, pages, comments, custom fields, categories, ' .
+         'and tags</strong> from a WordPress export file into a Google App ' .
+         'Engine application.',
+         'wordpress-importer'),
+      array( $GLOBALS['gae_wp_import'], 'dispatch' ));
 }
-add_action( 'admin_init', 'wordpress_importer_init' );
+add_action( 'admin_init', __NAMESPACE__ . '\\wordpress_importer_init' );
