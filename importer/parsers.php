@@ -41,8 +41,8 @@ class WXR_Parser {
 				echo $error[0] . ':' . $error[1] . ' ' . esc_html( $error[2] );
 			}
 			echo '</pre>';
-			echo '<p><strong>' . __( 'There was an error when reading this WXR file', 'wordpress-importer' ) . '</strong><br />';
-			echo __( 'Details are shown above. The importer will now try again with a different parser...', 'wordpress-importer' ) . '</p>';
+			echo '<p><strong>' . __( 'There was an error when reading this WXR file', 'gae-wordpress-importer' ) . '</strong><br />';
+			echo __( 'Details are shown above. The importer will now try again with a different parser...', 'gae-wordpress-importer' ) . '</p>';
 		}
 
 		// use regular expressions if nothing else available or this is bad XML
@@ -66,7 +66,7 @@ class WXR_Parser_SimpleXML {
 		$success = $dom->loadXML( file_get_contents( $file ) );
 
 		if ( ! $success || isset( $dom->doctype ) ) {
-			return new \WP_Error( 'SimpleXML_parse_error', __( 'There was an error when reading this WXR file', 'wordpress-importer' ), libxml_get_errors() );
+			return new \WP_Error( 'SimpleXML_parse_error', __( 'There was an error when reading this WXR file', 'gae-wordpress-importer' ), libxml_get_errors() );
 		}
 
 		$xml = simplexml_import_dom( $dom );
@@ -74,16 +74,16 @@ class WXR_Parser_SimpleXML {
 
 		// halt if loading produces an error
 		if ( ! $xml )
-			return new \WP_Error( 'SimpleXML_parse_error', __( 'There was an error when reading this WXR file', 'wordpress-importer' ), libxml_get_errors() );
+			return new \WP_Error( 'SimpleXML_parse_error', __( 'There was an error when reading this WXR file', 'gae-wordpress-importer' ), libxml_get_errors() );
 
 		$wxr_version = $xml->xpath('/rss/channel/wp:wxr_version');
 		if ( ! $wxr_version )
-			return new \WP_Error( 'WXR_parse_error', __( 'This does not appear to be a WXR file, missing/invalid WXR version number', 'wordpress-importer' ) );
+			return new \WP_Error( 'WXR_parse_error', __( 'This does not appear to be a WXR file, missing/invalid WXR version number', 'gae-wordpress-importer' ) );
 
 		$wxr_version = (string) trim( $wxr_version[0] );
 		// confirm that we are dealing with the correct file format
 		if ( ! preg_match( '/^\d+\.\d+$/', $wxr_version ) )
-			return new \WP_Error( 'WXR_parse_error', __( 'This does not appear to be a WXR file, missing/invalid WXR version number', 'wordpress-importer' ) );
+			return new \WP_Error( 'WXR_parse_error', __( 'This does not appear to be a WXR file, missing/invalid WXR version number', 'gae-wordpress-importer' ) );
 
 		$base_url = $xml->xpath('/rss/channel/wp:base_site_url');
 		$base_url = (string) trim( $base_url[0] );
@@ -273,7 +273,7 @@ class WXR_Parser_XML {
 		xml_parser_free( $xml );
 
 		if ( ! preg_match( '/^\d+\.\d+$/', $this->wxr_version ) )
-			return new \WP_Error( 'WXR_parse_error', __( 'This does not appear to be a WXR file, missing/invalid WXR version number', 'wordpress-importer' ) );
+			return new \WP_Error( 'WXR_parse_error', __( 'This does not appear to be a WXR file, missing/invalid WXR version number', 'gae-wordpress-importer' ) );
 
 		return array(
 			'authors' => $this->authors,
@@ -462,7 +462,7 @@ class WXR_Parser_Regex {
 		}
 
 		if ( ! $wxr_version )
-			return new \WP_Error( 'WXR_parse_error', __( 'This does not appear to be a WXR file, missing/invalid WXR version number', 'wordpress-importer' ) );
+			return new \WP_Error( 'WXR_parse_error', __( 'This does not appear to be a WXR file, missing/invalid WXR version number', 'gae-wordpress-importer' ) );
 
 		return array(
 			'authors' => $this->authors,
