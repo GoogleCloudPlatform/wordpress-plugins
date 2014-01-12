@@ -398,7 +398,7 @@ class WP_Import extends \WP_Importer {
 				} else {
 					printf( __( 'Failed to create new user for %s. Their posts will be attributed to the current user.', 'gae-wordpress-importer' ), esc_html($this->authors[$old_login]['author_display_name']) );
 					if ( defined('APP_ENGINE_IMPORT_DEBUG') && APP_ENGINE_IMPORT_DEBUG ) {
-            syslog(LOG_DEBUG, $user_id->get_error_message());
+            syslog(LOG_DEBUG, __METHOD__ . ' ' . $user_id->get_error_message());
 						echo ' ' . $user_id->get_error_message();
           }
 					echo '<br />';
@@ -451,8 +451,7 @@ class WP_Import extends \WP_Importer {
 			} else {
 				printf( __( 'Failed to import category %s', 'gae-wordpress-importer' ), esc_html($cat['category_nicename']) );
 				if ( defined('APP_ENGINE_IMPORT_DEBUG') && APP_ENGINE_IMPORT_DEBUG ) {
-          syslog(LOG_DEBUG,
-                 $id->get_error_message() . ' ' . __FILE__ . ':' . __LINE__);
+          syslog(LOG_DEBUG, __METHOD__ . ': ' . $id->get_error_message());
 					echo ': ' . $id->get_error_message();
         }
 				echo '<br />';
@@ -493,8 +492,10 @@ class WP_Import extends \WP_Importer {
 					$this->processed_terms[intval($tag['term_id'])] = $id['term_id'];
 			} else {
 				printf( __( 'Failed to import post tag %s', 'gae-wordpress-importer' ), esc_html($tag['tag_name']) );
-				if ( defined('APP_ENGINE_IMPORT_DEBUG') && APP_ENGINE_IMPORT_DEBUG )
+				if ( defined('APP_ENGINE_IMPORT_DEBUG') && APP_ENGINE_IMPORT_DEBUG ) {
+          syslog(LOG_DEBUG, __METHOD__ . ': ' . $id->get_error_message());
 					echo ': ' . $id->get_error_message();
+        }
 				echo '<br />';
 				continue;
 			}
@@ -539,8 +540,10 @@ class WP_Import extends \WP_Importer {
 					$this->processed_terms[intval($term['term_id'])] = $id['term_id'];
 			} else {
 				printf( __( 'Failed to import %s %s', 'gae-wordpress-importer' ), esc_html($term['term_taxonomy']), esc_html($term['term_name']) );
-				if ( defined('APP_ENGINE_IMPORT_DEBUG') && APP_ENGINE_IMPORT_DEBUG )
+				if ( defined('APP_ENGINE_IMPORT_DEBUG') && APP_ENGINE_IMPORT_DEBUG ) {
+          syslog(LOG_DEBUG, __METHOD__ . ': ' . $id->get_error_message());
 					echo ': ' . $id->get_error_message();
+        }
 				echo '<br />';
 				continue;
 			}
@@ -647,8 +650,10 @@ class WP_Import extends \WP_Importer {
 				if ( is_wp_error( $post_id ) ) {
 					printf( __( 'Failed to import %s &#8220;%s&#8221;', 'gae-wordpress-importer' ),
 						$post_type_object->labels->singular_name, esc_html($post['post_title']) );
-					if ( defined('APP_ENGINE_IMPORT_DEBUG') && APP_ENGINE_IMPORT_DEBUG )
+					if ( defined('APP_ENGINE_IMPORT_DEBUG') && APP_ENGINE_IMPORT_DEBUG ) {
+            syslog(LOG_DEBUG, __METHOD__ . ': ' . $post_id->get_error_message());-
 						echo ': ' . $post_id->get_error_message();
+          }
 					echo '<br />';
 					continue;
 				}
@@ -680,8 +685,10 @@ class WP_Import extends \WP_Importer {
 							do_action( 'wp_import_insert_term', $t, $term, $post_id, $post );
 						} else {
 							printf( __( 'Failed to import %s %s', 'gae-wordpress-importer' ), esc_html($taxonomy), esc_html($term['name']) );
-							if ( defined('APP_ENGINE_IMPORT_DEBUG') && APP_ENGINE_IMPORT_DEBUG )
+							if ( defined('APP_ENGINE_IMPORT_DEBUG') && APP_ENGINE_IMPORT_DEBUG ) {
+                syslog(LOG_DEBUG, __METHOD__ . ': ' . $t->get_error_message());
 								echo ': ' . $t->get_error_message();
+              }
 							echo '<br />';
 							do_action( 'wp_import_insert_term_failed', $t, $term, $post_id, $post );
 							continue;
@@ -1118,29 +1125,6 @@ class WP_Import extends \WP_Importer {
     </form>
     <?php
   }
-
-/*
-
-   if (empty($bucket_name)) {
-      ?><div class="error"><p><?php _e('Before you can upload your import file, you will need to fix the following error:'); ?></p>
-      <p><strong><?php echo 'Google Cloud Storage bucket name has not been configured.'; ?></strong></p></div><?php
-    } else {
-      $upload_url = Uploads::get_wrapped_url($action);
-      $size = size_format( $bytes );
-      ?>
-      <form enctype="multipart/form-data" id="import-upload-form" method="post" class="wp-upload-form" action="<?php echo esc_url( $upload_url ); ?>">
-        <p>
-          <label for="upload"><?php _e( 'Choose a file from your computer:' ); ?></label> (<?php printf( __('Maximum size: %s' ), $size ); ?>)
-          <input type="file" id="upload" name="import" size="25" />
-          <input type="hidden" name="action" value="save" />
-          <input type="hidden" name="max_file_size" value="<?php echo $bytes; ?>" />
-        </p>
-        <?php \submit_button( __('Upload file and import'), 'button' ); ?>
-      </form>
-    <?php
-    }
-  }
-*/
 	/**
 	 * Decide if the given meta key maps to information we will want to import
 	 *
