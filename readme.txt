@@ -78,6 +78,11 @@ the cache, so if you want to use comments on a fully-cached site, we recommend
 
 == Changelog ==
 
+= 1.3 =
+* Provide a URL Fetch based HTTP client, which is optimized for the App Engine
+  environment. This also corrects issues caused by fsockopen only being available
+  to paid application in the production environment.
+
 = 1.2 =
 * Use CloudStorageTools::getPublicUrl in the dev environment so PIL is not a requirement.
 * Fix Readme file to highlight that the plugin is for Google App Engine only.
@@ -93,6 +98,11 @@ the cache, so if you want to use comments on a fully-cached site, we recommend
 
 
 == Upgrade Notice ==
+
+= 1.3 =
+* Provide a URL Fetch based HTTP client, which is optimized for the App Engine
+  environment. This also corrects issues caused by fsockopen only being available
+  to paid application in the production environment.
 
 = 1.2 =
 * Use CloudStorageTools::getPublicUrl in the dev environment so PIL is not a requirement.
