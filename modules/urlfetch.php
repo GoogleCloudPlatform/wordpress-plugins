@@ -73,7 +73,9 @@ class WP_HTTP_urlfetch {
       'blocking' => true,
       'headers' => [],
       'body' => null,
-      'cookies' => array()
+      'cookies' => array(),
+      'filename' => null,
+      'sslverify' => true,
   ];
 
   /**
@@ -116,8 +118,9 @@ class WP_HTTP_urlfetch {
     if (isset($r['timeout'])) {
       $req->setDeadline($r['timeout']);
     }
-    // App Engine does not allow setting the number of redirects.
-    $req->setFollowRedirects(isset($r['redirection']));
+    // App Engine does not allow setting the number of redirects, only if we
+    // follow redirects or not.
+    $req->setFollowRedirects(isset($r['redirection']) && $r['redirection'] != 0);
 
     foreach($r['headers'] as $key => $value) {
       $header = $req->addHeader();
@@ -180,6 +183,7 @@ class WP_HTTP_urlfetch {
 
     return $response;
   }
+
   /**
    * Whether this class can be used for retrieving an URL.
    *
