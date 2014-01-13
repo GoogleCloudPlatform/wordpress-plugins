@@ -651,7 +651,7 @@ class WP_Import extends \WP_Importer {
 					printf( __( 'Failed to import %s &#8220;%s&#8221;', 'gae-wordpress-importer' ),
 						$post_type_object->labels->singular_name, esc_html($post['post_title']) );
 					if ( defined('APP_ENGINE_IMPORT_DEBUG') && APP_ENGINE_IMPORT_DEBUG ) {
-            syslog(LOG_DEBUG, __METHOD__ . ': ' . $post_id->get_error_message());-
+            syslog(LOG_DEBUG, __METHOD__ . ': ' . $post_id->get_error_message());
 						echo ': ' . $post_id->get_error_message();
           }
 					echo '<br />';
