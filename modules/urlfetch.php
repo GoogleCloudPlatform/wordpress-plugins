@@ -65,6 +65,17 @@ class WP_HTTP_urlfetch {
       "PATCH" => RequestMethod::PATCH
   ];
 
+  private static $request_defaults = [
+      'method' => 'GET',
+      'timeout' => 5,
+      'redirection' => 5,
+      'httpversion' => '1.0',
+      'blocking' => true,
+      'headers' => [],
+      'body' => null,
+      'cookies' => array()
+  ];
+
   /**
    * Make a HTTP request to a supplied URL.
    *
@@ -76,18 +87,7 @@ class WP_HTTP_urlfetch {
    * @return bool
    */
   public function request($url, $args) {
-    $defaults = [
-        'method' => 'GET',
-        'timeout' => 5,
-        'redirection' => 5,
-        'httpversion' => '1.0',
-        'blocking' => true,
-        'headers' => [],
-        'body' => null,
-        'cookies' => array()
-    ];
-
-    $r = wp_parse_args( $args, $defaults );
+    $r = wp_parse_args($args, self::$request_defaults);
 
     // Construct Cookie: header if any cookies are set.
     WP_Http::buildCookieHeader( $r );
@@ -96,8 +96,7 @@ class WP_HTTP_urlfetch {
     $ssl_verify = isset($r['sslverify']) && $r['sslverify'];
     if ($is_local) {
       $ssl_verify = apply_filters('https_local_ssl_verify', $ssl_verify);
-    }
-    elseif ( ! $is_local ) {
+    } else {
       $ssl_verify = apply_filters('https_ssl_verify', $ssl_verify);
     }
 
@@ -145,9 +144,19 @@ class WP_HTTP_urlfetch {
     $cookies = [];
 
     foreach($resp->getHeaderList() as $header) {
-      $headers[$header->getKey()] = $header->getValue();
-      if ('set-cookie' == $header->getKey()) {
-        $cookies[] = new \WP_Http_Cookie($header->getValue(), $url);
+      $key = strtolower($header->getKey());
+      $value = trim($header->getValue());
+      // If a header has multiple values then it is stored in an array
+      if (isset($headers[$key])) {
+        if (!is_array($headers[$key])) {
+          $headers[$key] = [$headers[$key]];
+        }
+        $headers[$key][] = $value;
+      } else {
+        $headers[$key] = $value;
+      }
+      if ('set-cookie' == $key) {
+        $cookies[] = new \WP_Http_Cookie($value, $url);
       }
     }
 
