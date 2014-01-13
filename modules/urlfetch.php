@@ -28,8 +28,15 @@
 UrlFetch::boostrap();
 
 class UrlFetch {
+  const FILTER_PRIORITY = 10;  // The WordPress default.
+  const FILTER_FUNCTION_ARG_COUNT = 3;  // Number of args for filter function.
+
   public static function boostrap() {
-    add_filter('http_api_transports', __CLASS__ . '::filter_api_transports', 10, 3);
+    add_filter(
+        'http_api_transports',
+        __CLASS__ . '::filter_api_transports',
+        self::FILTER_PRIORITY,
+        self::FILTER_FUNCTION_ARG_COUNT);
   }
 
   public static function filter_api_transports($transports, $args, $url) {
