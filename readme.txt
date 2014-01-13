@@ -78,6 +78,9 @@ the cache, so if you want to use comments on a fully-cached site, we recommend
 
 == Changelog ==
 
+= 1.3 =
+* Add support for importing a WDX file from Google Cloud Storage into the site.
+
 = 1.2 =
 * Use CloudStorageTools::getPublicUrl in the dev environment so PIL is not a requirement.
 * Fix Readme file to highlight that the plugin is for Google App Engine only.
@@ -93,6 +96,9 @@ the cache, so if you want to use comments on a fully-cached site, we recommend
 
 
 == Upgrade Notice ==
+
+= 1.3 =
+* Add support for importing a WDX file from Google Cloud Storage into the site.
 
 = 1.2 =
 * Use CloudStorageTools::getPublicUrl in the dev environment so PIL is not a requirement.
