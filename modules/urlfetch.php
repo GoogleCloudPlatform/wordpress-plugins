@@ -32,6 +32,10 @@ class UrlFetch {
   const FILTER_FUNCTION_ARG_COUNT = 3;  // Number of args for filter function.
 
   public static function boostrap() {
+    // Never use fsockopen on App Engine. We use streams on versions < 3.7 and
+    // WP_HTTP_urlfetch on versions >= 3.7
+    add_filter( 'use_fsockopen_transport', '__return_false');
+
     add_filter(
         'http_api_transports',
         __CLASS__ . '::filter_api_transports',
