@@ -292,7 +292,7 @@ class Uploads {
 	 * @param string $url
 	 * @return string Wrapped URL
 	 */
-	public static function get_wrapped_url( $url ) {
+	protected static function get_wrapped_url( $url ) {
 		$options = [
 			'gs_bucket_name' => get_option( 'appengine_uploads_bucket', '' ),
 		];
