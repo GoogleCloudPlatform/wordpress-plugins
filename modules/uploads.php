@@ -373,6 +373,9 @@ class Uploads {
 				update_post_meta( $id, '_appengine_imageurl_file', $file );
 			}
 			catch ( CloudStorageException $e ) {
+        syslog(LOG_ERR,
+            'There was an exception creating the Image Serving URL, details ' .
+            $e->getMessage());
 				self::$skip_image_filters = true;
 				$data = image_downsize( $id, $size );
 				self::$skip_image_filters = false;

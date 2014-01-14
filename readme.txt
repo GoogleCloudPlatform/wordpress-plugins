@@ -3,7 +3,7 @@ Contributors: google, sennza
 Tags: google, app engine, gae, mail, email, uploads, uploading, cloud storage
 Requires at least: 3.5
 Tested up to: 3.8
-Stable tag: 1.2
+Stable tag: 1.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,7 @@ the cache, so if you want to use comments on a fully-cached site, we recommend
 * Provide a URL Fetch based HTTP client, which is optimized for the App Engine
   environment. This also corrects issues caused by fsockopen only being available
   to paid application in the production environment.
+* Fix bug detecting if the Cloud Storage bucket is writable during plugin setup.
 
 = 1.2 =
 * Use CloudStorageTools::getPublicUrl in the dev environment so PIL is not a requirement.

@@ -34,7 +34,7 @@ if ( ! defined( 'WP_LOAD_IMPORTERS' ) )
 	return;
 
 /** Display verbose errors */
-define( 'APP_ENGINE_IMPORT_DEBUG', true );
+define( 'APP_ENGINE_IMPORT_DEBUG', false );
 
 // Load Importer API
 require_once ABSPATH . 'wp-admin/includes/import.php';
