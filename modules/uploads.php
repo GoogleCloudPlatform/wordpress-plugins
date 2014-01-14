@@ -603,7 +603,7 @@ class Admin {
 		}
 
     $bucket_name = 'gs://' . $input;
-    $valid_bucket_name = false;
+    $valid_bucket_name = true;
     // In the devappserver there is a chicken and egg problem with bucket
     // creation - so we need to special case this check for the time being.
     if ( self::is_production() ) {
