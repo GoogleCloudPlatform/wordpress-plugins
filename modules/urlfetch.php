@@ -37,11 +37,24 @@ class UrlFetch {
         __CLASS__ . '::filter_api_transports',
         self::FILTER_PRIORITY,
         self::FILTER_FUNCTION_ARG_COUNT);
+
+    add_action(
+      'appengine_activation',
+      __CLASS__ . '::plugin_activated',
+      self::FILTER_PRIORITY
+    );
   }
 
   public static function filter_api_transports($transports, $args, $url) {
     // Drop the other transports and only use urlfetch.
     return ['urlfetch'];
+  }
+
+  public static function plugin_activated() {
+    // When the plug in is activated we flush memcache - as it might hold stale
+    // data from a failed HTTP requests (e.g. the admin page)
+    $memcache = new \Memcached();
+    $memcache->flush();
   }
 }
 
