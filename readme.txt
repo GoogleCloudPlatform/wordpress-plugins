@@ -80,6 +80,9 @@ the cache, so if you want to use comments on a fully-cached site, we recommend
 
 = 1.3 =
 * Add support for importing a WDX file from Google Cloud Storage into the site.
+* Provide a URL Fetch based HTTP client, which is optimized for the App Engine
+  environment. This also corrects issues caused by fsockopen only being available
+  to paid application in the production environment.
 
 = 1.2 =
 * Use CloudStorageTools::getPublicUrl in the dev environment so PIL is not a requirement.
@@ -99,6 +102,9 @@ the cache, so if you want to use comments on a fully-cached site, we recommend
 
 = 1.3 =
 * Add support for importing a WDX file from Google Cloud Storage into the site.
+* Provide a URL Fetch based HTTP client, which is optimized for the App Engine
+  environment. This also corrects issues caused by fsockopen only being available
+  to paid application in the production environment.
 
 = 1.2 =
 * Use CloudStorageTools::getPublicUrl in the dev environment so PIL is not a requirement.
