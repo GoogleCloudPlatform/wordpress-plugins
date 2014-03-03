@@ -26,10 +26,6 @@
  */
 namespace google\appengine\WordPress\Uploads;
 
-require_once 'google/appengine/api/app_identity/AppIdentityService.php';
-require_once 'google/appengine/api/cloud_storage/CloudStorageException.php';
-require_once 'google/appengine/api/cloud_storage/CloudStorageTools.php';
-
 require_once ABSPATH . '/wp-includes/class-wp-image-editor.php';
 require_once ABSPATH . '/wp-includes/class-wp-image-editor-gd.php';
 
@@ -66,6 +62,9 @@ class Uploads {
 	 */
 	const NORMAL_PRIORITY = 10;
 
+  // Various configuration names
+  const USE_SECURE_URLS_OPTION = 'appengine_use_secure_urls';
+
 	/**
 	 * Image sizes cache
 	 *
@@ -82,7 +81,7 @@ class Uploads {
 	 */
 	protected static $skip_image_filters = false;
 
-	/**
+  /**
 	 * Register our filters and actions
 	 */
 	public static function bootstrap() {
@@ -228,12 +227,16 @@ class Uploads {
 		$context = array_replace_recursive( $default, $gcs_opts );
 		stream_context_set_default( $context );
 
+    $bucket_name = get_option('appengine_uploads_bucket', '');
 		$values = array(
-			'path' => 'gs://' . get_option( 'appengine_uploads_bucket', '' ),
+			'path' => 'gs://' . $bucket_name,
 			'subdir' => '',
 			'error' => false,
 		);
-		$values['url']     = 'https://storage.googleapis.com/' . get_option( 'appengine_uploads_bucket', '' );
+    $secure_urls = (bool) get_option(self::USE_SECURE_URLS_OPTION, '' );
+    $public_url = CloudStorageTools::getPublicUrl('gs://' . $bucket_name,
+                                                  $secure_urls);
+		$values['url'] = rtrim($public_url, '/');
 		$values['basedir'] = $values['path'];
 		$values['baseurl'] = $values['url'];
 		return $values;
@@ -355,11 +358,13 @@ class Uploads {
 
 		$baseurl     = get_post_meta( $id, '_appengine_imageurl', true );
 		$cached_file = get_post_meta( $id, '_appengine_imageurl_file', true );
+    $secure_urls = (bool) get_option(self::USE_SECURE_URLS_OPTION, false);
 
 		if ( empty( $baseurl ) || $cached_file !== $file ) {
 			try {
 				if (self::is_production()) {
-					$baseurl = CloudStorageTools::getImageServingUrl($file);
+          $options = ['secure_url' => $secure_urls];
+					$baseurl = CloudStorageTools::getImageServingUrl($file, $options);
 				}
 				// If running on the development server, use getPublicUrl() instead
 				// of getImageServingUrl().
@@ -367,7 +372,7 @@ class Uploads {
 				// in the development environment.
 				// TODO: this is a temporary modification.
 				else {
-					$baseurl = CloudStorageTools::getPublicUrl($file, true);
+					$baseurl = CloudStorageTools::getPublicUrl($file, $secure_urls);
 				}
 				update_post_meta( $id, '_appengine_imageurl', $baseurl );
 				update_post_meta( $id, '_appengine_imageurl_file', $file );
@@ -566,10 +571,32 @@ class Admin {
 	}
 
 	public static function register_google_settings() {
-		register_setting( 'appengine_settings', 'appengine_uploads_bucket', __CLASS__ . '::bucket_validation' );
+    register_setting('appengine_settings',
+                     Uploads::USE_SECURE_URLS_OPTION,
+                     __CLASS__ . '::secure_urls_validation');
 
-		add_settings_section( 'appengine-uploads', __( 'Upload Settings', 'appengine' ), __CLASS__ . '::section_text', 'appengine' );
-		add_settings_field( 'appengine_uploads_bucket', __( 'Bucket Name', 'appengine' ), __CLASS__ . '::bucket_input', 'appengine', 'appengine-uploads', [ 'label_for' => 'appengine_uploads_bucket' ] );
+		register_setting('appengine_settings',
+                     'appengine_uploads_bucket',
+                     __CLASS__ . '::bucket_validation');
+
+		add_settings_section('appengine-uploads',
+                         __( 'Upload Settings', 'appengine' ),
+                         __CLASS__ . '::section_text',
+                         'appengine');
+
+		add_settings_field('appengine_uploads_bucket',
+                       __( 'Bucket Name', 'appengine' ),
+                       __CLASS__ . '::bucket_input',
+                       'appengine',
+                       'appengine-uploads',
+                       ['label_for' => 'appengine_uploads_bucket']);
+
+    add_settings_field(Uploads::USE_SECURE_URLS_OPTION,
+                       __('Use secure URLs for serving media files', 'appengine'),
+                       __CLASS__ . '::enable_secure_urls',
+                       'appengine',
+                       'appengine-uploads',
+                       ['label_for' => Uploads::USE_SECURE_URLS_OPTION]);
 	}
 
 	public static function section_text() {
@@ -592,6 +619,19 @@ class Admin {
 		}
 	}
 
+  public static function enable_secure_urls() {
+    $enabled = get_option(Uploads::USE_SECURE_URLS_OPTION, false );
+    echo '<input id="appengine_use_secure_urls" name="appengine_use_secure_urls"
+				type="checkbox" ' . checked( $enabled, true, false ) . ' />';
+    echo '<p class="description">' . __(
+          'Check to serve uploaded media files over HTTPs. ' .
+          '<strong>Note:</strong> This setting only effects new uploads, it will not ' .
+          'change the HTTP scheme for files that were previously uploaded.',
+          'appengine') .
+          '</p>';
+
+  }
+
 	public static function bucket_input() {
 		$bucket = get_option( 'appengine_uploads_bucket', '' );
 		echo '<input id="appengine_uploads_bucket" name="appengine_uploads_bucket"
@@ -599,6 +639,10 @@ class Admin {
 
 		echo '<p class="description">' . __( 'Leave blank to use the default bucket', 'appengine' ) . '</p>';
 	}
+
+  public static function secure_urls_validation($input) {
+    return (bool) $input;
+  }
 
 	public static function bucket_validation( $input ) {
 		if ( empty( $input ) ) {

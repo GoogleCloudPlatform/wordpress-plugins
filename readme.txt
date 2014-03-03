@@ -2,8 +2,8 @@
 Contributors: google, sennza
 Tags: google, app engine, gae, mail, email, uploads, uploading, cloud storage
 Requires at least: 3.5
-Tested up to: 3.8
-Stable tag: 1.3
+Tested up to: 3.8.1
+Stable tag: 1.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -78,6 +78,13 @@ the cache, so if you want to use comments on a fully-cached site, we recommend
 
 == Changelog ==
 
+= 1.4 =
+* Use a default 30 second timeout for URLFetch requests.
+* Use auto loading for GAE SDK now that it is available.
+* Use CloudStorageTools::getPublicUrl() for Cloud Storage URLs so that they
+  work correctly on the development server.
+* Add support for serving uploaded media files over HTTPs.
+
 = 1.3 =
 * Add support for importing a WDX file from Google Cloud Storage into the site.
 * Provide a URL Fetch based HTTP client, which is optimized for the App Engine
@@ -100,6 +107,13 @@ the cache, so if you want to use comments on a fully-cached site, we recommend
 
 
 == Upgrade Notice ==
+
+= 1.4 =
+* Use a default 30 second timeout for URLFetch requests.
+* Use auto loading for GAE SDK.
+* Use CloudStorageTools::getPublicUrl() for Cloud Storage URLs so that they
+  work correctly on the development server.
+* Add support for serving uploaded media files over HTTPs.
 
 = 1.3 =
 * Add support for importing a WDX file from Google Cloud Storage into the site.

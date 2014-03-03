@@ -91,7 +91,7 @@ class WP_HTTP_urlfetch {
 
   private static $request_defaults = [
       'method' => 'GET',
-      'timeout' => 5,
+      'timeout' => 30,
       'redirection' => 5,
       'httpversion' => '1.0',
       'blocking' => true,
@@ -158,8 +158,10 @@ class WP_HTTP_urlfetch {
       ApiProxy::makeSyncCall('urlfetch', 'Fetch', $req, $resp);
     } catch (ApplicationError $e) {
       syslog(LOG_ERR,
-          sprintf("Call to URLFetch failed with application error %d.",
-                  $e->getApplicationError()));
+          sprintf(
+              "Call to URLFetch failed with application error %d for url %s.",
+              $e->getApplicationError(),
+              $url));
       return new \WP_Error('http_request_failed', $e->getMessage());
     }
 

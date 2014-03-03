@@ -23,8 +23,6 @@
  */
 
 namespace google\appengine\WordPress\Mail {
-	require_once 'google/appengine/api/app_identity/AppIdentityService.php';
-	require_once 'google/appengine/api/mail/Message.php';
 
 	use google\appengine\api\app_identity\AppIdentityService;
 	use google\appengine\api\mail\Message;
