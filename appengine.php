@@ -76,4 +76,16 @@ if ( $modules_dir = @ opendir( __DIR__ . '/modules/' ) ) {
 // Include the App Engine specific WordPress importer.
 require_once __DIR__ . '/importer/wordpress-importer.php';
 
-register_activation_hook( __FILE__, __NAMESPACE__ . '\\activation' );
+// Activation hook for non-network installs
+if ( !is_multisite() ) {
+    register_activation_hook( __FILE__, __NAMESPACE__ . '\\activation' );
+} else {
+    // network installs do not run activation hooks so
+    // we have to manually call our activation routine
+    // and guard that it only happens once
+    $option_name = 'appengine_activated';
+    if ( !get_option( $option_name ) ) {
+        activation();
+        add_option( $option_name, '1' );
+    }
+}
