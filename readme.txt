@@ -2,8 +2,8 @@
 Contributors: google, sennza
 Tags: google, app engine, gae, mail, email, uploads, uploading, cloud storage
 Requires at least: 3.5
-Tested up to: 3.8.1
-Stable tag: 1.4
+Tested up to: 4.0
+Stable tag: 1.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -77,6 +77,10 @@ the cache, so if you want to use comments on a fully-cached site, we recommend
 
 
 == Changelog ==
+
+= 1.5 =
+* Fix for media uploads failing in WordPress 4.0 due to incorrect auth cookies
+  being copied.
 
 = 1.4 =
 * Use a default 30 second timeout for URLFetch requests.
