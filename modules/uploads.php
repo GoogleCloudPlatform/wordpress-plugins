@@ -192,8 +192,8 @@ class Uploads {
 		$auth_cookie      = wp_generate_auth_cookie( $user_id, $expiration, $scheme );
 		$logged_in_cookie = wp_generate_auth_cookie( $user_id, $expiration, 'logged_in' );
 
-		$_COOKIE[$auth_cookie_name] = $auth_cookie;
-		$_COOKIE[LOGGED_IN_COOKIE]  = $logged_in_cookie;
+		if ( !isset($_COOKIE[$auth_cookie_name]) ) $_COOKIE[$auth_cookie_name] = $auth_cookie;
+		if ( !isset($_COOKIE[LOGGED_IN_COOKIE]) ) $_COOKIE[LOGGED_IN_COOKIE] = $logged_in_cookie;
 	}
 
 	/**
