@@ -567,7 +567,7 @@ class Editor extends WP_Image_Editor_GD {
 class Admin {
 	public static function bootstrap(){
 		add_action( 'appengine_register_settings', __CLASS__ . '::register_google_settings' );
-		add_action( 'appengine_activation', __CLASS__ . '::set_default_bucket' );
+		add_filter( 'default_option_appengine_uploads_bucket', __CLASS__ . '::filter_upload_default_bucket' );
 	}
 
 	public static function register_google_settings() {
@@ -668,22 +668,25 @@ class Admin {
 		return $input;
 	}
 
-	public static function set_default_bucket() {
-		$current = get_option( 'appengine_uploads_bucket', false );
-		if ( ! empty( $current ) ) {
-			return;
-		}
-
-		$default = CloudStorageTools::getDefaultGoogleStorageBucketName();
-		update_option( 'appengine_uploads_bucket', $default );
-	}
+    /**
+     * Filter get_option('appengine_uploads_bucket') when the value is not set
+     *
+     * @param mixed $default
+     * @return string
+     */
+	public static function filter_upload_default_bucket( $default ) {
+      if (!strlen($default)) {
+        return CloudStorageTools::getDefaultGoogleStorageBucketName();
+      }
+      return $default;
+    }
 
   /**
    * Workaround for Windows bug in is_writable() function
    *
    * @since 2.8.0
    *
-   * @param string $path
+   * @param string $bucket
    * @return bool
    */
   public static function bucket_is_writable( $bucket ) {
