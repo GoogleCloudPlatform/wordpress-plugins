@@ -395,9 +395,9 @@ class Uploads {
 		// since in the development context getPublicUrl() is currently used to
 		// generate the URL.
 		if (self::is_production()) {
-			if ( ! is_null( $options['size'] ) ) {
+			if ( ! empty( $options['size'] ) ) {
 				$url .= ( '=s' . $options['size'] );
-				if ( $options['crop'] ) {
+				if ( isset($options['crop']) ) {
 					$url .= '-c';
 				}
 			}
