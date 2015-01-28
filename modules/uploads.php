@@ -408,8 +408,8 @@ class Uploads {
 
 		$data = [
 			$url, // URL
-			false, // width
-			false, // height
+			$size['width'],
+			$size['height'],
 			(bool) $real_size // image is intermediate
 		];
 		return $data;
