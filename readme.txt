@@ -2,8 +2,8 @@
 Contributors: google, sennza
 Tags: google, app engine, gae, mail, email, uploads, uploading, cloud storage
 Requires at least: 3.5
-Tested up to: 4.0
-Stable tag: 1.5
+Tested up to: 4.1.1
+Stable tag: 1.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -80,7 +80,8 @@ the cache, so if you want to use comments on a fully-cached site, we recommend
 
 = 1.6 =
 * Fixed image sizes after uploading images (credit: tuanmh).
-* Set 24 hour validity on upload URLs for media uploads.
+* Set 24 hour validity on upload URLs for media uploads (Requires App Engine PHP
+  SDK 1.9.18 or greater).
 * Fix link in readme for Memcache.
 
 = 1.5 =
