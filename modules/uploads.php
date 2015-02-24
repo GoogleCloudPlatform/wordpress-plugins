@@ -298,6 +298,7 @@ class Uploads {
 	protected static function get_wrapped_url( $url ) {
 		$options = [
 			'gs_bucket_name' => get_option( 'appengine_uploads_bucket', '' ),
+      'url_expiry_time_seconds' => 60 * 60 * 24,  // One day is the maximum
 		];
 		$wp_maxupsize = wp_max_upload_size();
 		// set max_bytes_per_blob option only if max upload size is a positive int

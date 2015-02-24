@@ -71,12 +71,17 @@ the cache, so if you want to use comments on a fully-cached site, we recommend
 [Intense Debate][] or [Disqus][] (with the synchronization disabled).
 
 [Batcache]: http://wordpress.org/plugins/batcache/
-[Memcache]: http://wordpress.org/plugins/memcache/
+[Memcache]: http://wordpress.org/extend/plugins/memcached/
 [Intense Debate]: http://wordpress.org/plugins/intensedebate/
 [Disqus]: http://wordpress.org/plugins/disqus-comment-system/
 
 
 == Changelog ==
+
+= 1.6 =
+* Fixed image sizes after uploading images (credit: tuanmh).
+* Set 24 hour validity on upload URLs for media uploads.
+* Fix link in readme for Memcache.
 
 = 1.5 =
 * Fix for media uploads failing in WordPress 4.0 due to incorrect auth cookies
