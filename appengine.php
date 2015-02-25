@@ -54,8 +54,16 @@ function is_development() {
  *
  * This just calls the action to allow the modules to act independently.
  */
-function activation() {
-	do_action( 'appengine_activation' );
+function activation($blog_id=null) {
+
+    if (!$blog_id) {
+        $blog_id = get_current_blog_id();
+    }
+
+    // support multisite by passing the new blog_id
+    // this allows modules to switch_to_blog($blog_id)
+    // before doing their jobs if needed
+	do_action( 'appengine_activation', $blog_id );
 }
 
 // Load the App Engine modules
@@ -76,4 +84,12 @@ if ( $modules_dir = @ opendir( __DIR__ . '/modules/' ) ) {
 // Include the App Engine specific WordPress importer.
 require_once __DIR__ . '/importer/wordpress-importer.php';
 
-register_activation_hook( __FILE__, __NAMESPACE__ . '\\activation' );
+// Activation hook for non-network installs
+if ( !is_multisite() ) {
+    register_activation_hook( __FILE__, __NAMESPACE__ . '\\activation' );
+} else {
+    // network installs do not run activation hooks so
+    // we have to manually call our activation routine
+    // whenever a new blog is created
+    add_action( 'wpmu_new_blog',  __NAMESPACE__ . '\\activation', 10, 1 );
+}
