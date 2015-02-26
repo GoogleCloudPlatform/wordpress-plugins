@@ -343,7 +343,22 @@ class Uploads {
 
 		// If height or width is null (i.e. full size), $real_size will be
 		// null, providing us a way to tell if the size is intermediate
-		$real_size = max( $size['height'], $size['width'] );
+		if ( is_null( $size['height'] ) || is_null( $size['width'] ) ) {
+			$real_size = false;
+		} else {
+			// Calculate the dimensions for the downsampled image 
+			$img_meta = wp_get_attachment_metadata( $id, true );
+			$resized_img = image_resize_dimensions( $img_meta['width'], $img_meta['height'], $size['width'], $size['height'], (bool) $size['crop'] );
+			
+			// If image_resize_dimensions returns false, the size is not intermediate and thus not required
+			if( $resized_img ) {
+				// The argument for getImageServingUrl is the longer dimension of the calculated size
+				$real_size = max( $resized_img[4], $resized_img[5] );
+			} else {
+				$real_size = false;
+			}
+		}
+		
 		if ( $real_size ) {
 			$options = [
 				'size' => $real_size,
@@ -364,7 +379,7 @@ class Uploads {
 		if ( empty( $baseurl ) || $cached_file !== $file ) {
 			try {
 				if (self::is_production()) {
-          $options = ['secure_url' => $secure_urls];
+					$options = ['secure_url' => $secure_urls];
 					$baseurl = CloudStorageTools::getImageServingUrl($file, $options);
 				}
 				// If running on the development server, use getPublicUrl() instead
@@ -409,10 +424,17 @@ class Uploads {
 
 		$data = [
 			$url, // URL
-			$size['width'],
-			$size['height'],
+			false, // width
+			false, // height
 			(bool) $real_size // image is intermediate
 		];
+		
+		// Return image dimensions if image is intermediate
+		if( (bool) $real_size == true ) {
+			$data[1] = $resized_img[4]; // width
+			$data[2] = $resized_img[5]; // height
+		}
+
 		return $data;
 	}
 
