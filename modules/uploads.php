@@ -298,7 +298,7 @@ class Uploads {
 	protected static function get_wrapped_url( $url ) {
 		$options = [
 			'gs_bucket_name' => get_option( 'appengine_uploads_bucket', '' ),
-      'url_expiry_time_seconds' => 60 * 60 * 24,  // One day is the maximum
+                        'url_expiry_time_seconds' => 60 * 60 * 24,  // One day is the maximum
 		];
 		$wp_maxupsize = wp_max_upload_size();
 		// set max_bytes_per_blob option only if max upload size is a positive int
@@ -331,42 +331,30 @@ class Uploads {
 		if ( 0 !== strpos( $file, 'gs://' ) || self::$skip_image_filters ) {
 			return $data;
 		}
-
+                
+                $metadata  = wp_get_attachment_metadata($id);
+                list($width, $height) = image_constrain_size_for_editor($metadata['width'], $metadata['height'], $size);
+                
+                $intermediate = !(($width === $metadata['width']) && ($height === $metadata['height']));
+                                
 		$sizes = self::image_sizes();
 		if ( is_array( $size ) ) {
-			$size = ['width' => $size[0], 'height' => $size[1], 'crop' => false];
+			$sizeParams = ['width' => $size[0], 'height' => $size[1], 'crop' => false];
 		}
 		else {
-			$size = $sizes[ $size ];
+			$sizeParams = $sizes[ $size ];
 		}
-		$options = [];
-
-		// If height or width is null (i.e. full size), $real_size will be
-		// null, providing us a way to tell if the size is intermediate
-		$real_size = max( $size['height'], $size['width'] );
-		if ( $real_size ) {
-			$options = [
-				'size' => $real_size,
-				'crop' => (bool) $size['crop']
-			];
-		}
-		else {
-			$options = [
-				'size' => 0,
-				'crop' => false
-			];
-		}
-
+                
 		$baseurl     = get_post_meta( $id, '_appengine_imageurl', true );
 		$cached_file = get_post_meta( $id, '_appengine_imageurl_file', true );
-    $secure_urls = (bool) get_option(self::USE_SECURE_URLS_OPTION, false);
+                $secure_urls = (bool) get_option(self::USE_SECURE_URLS_OPTION, false);
 
 		if ( empty( $baseurl ) || $cached_file !== $file ) {
 			try {
 				if (self::is_production()) {
-          $options = ['secure_url' => $secure_urls];
-					$baseurl = CloudStorageTools::getImageServingUrl($file, $options);
-				}
+                                        $options = ['secure_url' => $secure_urls];
+                                                $baseurl = CloudStorageTools::getImageServingUrl($file, $options);
+                                            }
 				// If running on the development server, use getPublicUrl() instead
 				// of getImageServingUrl().
 				// This removes the requirement for the Python PIL library to be installed
@@ -375,8 +363,8 @@ class Uploads {
 				else {
 					$baseurl = CloudStorageTools::getPublicUrl($file, $secure_urls);
 				}
-				update_post_meta( $id, '_appengine_imageurl', $baseurl );
-				update_post_meta( $id, '_appengine_imageurl_file', $file );
+                                update_post_meta( $id, '_appengine_imageurl', $baseurl );
+                                update_post_meta( $id, '_appengine_imageurl_file', $file );
 			}
 			catch ( CloudStorageException $e ) {
         syslog(LOG_ERR,
@@ -390,30 +378,26 @@ class Uploads {
 			}
 		}
 
-		$url = $baseurl;
+                $url = $baseurl;
 
 		// Only append image options to the URL if we're running in production,
 		// since in the development context getPublicUrl() is currently used to
 		// generate the URL.
 		if (self::is_production()) {
-			if ( ! is_null( $options['size'] ) ) {
-				$url .= ( '=s' . $options['size'] );
-				if ( $options['crop'] ) {
-					$url .= '-c';
-				}
-			}
-			else {
-				$url .= '=s0';
-			}
+                    if ( $intermediate && $sizeParams['crop']) {                           
+                        $url .= ('=w'.$sizeParams['width']. '-h'.$sizeParams['height'].'-c');
+                    } elseif( $intermediate && !$sizeParams['crop']) {
+                        $url .=  ('=w'.$width. '-h'.$height);
+                    }else {
+                        $url .= '=s0';
+                    }
 		}
-
-		$data = [
-			$url, // URL
-			$size['width'],
-			$size['height'],
-			(bool) $real_size // image is intermediate
-		];
-		return $data;
+                
+                if($intermediate && $sizeParams['crop']){
+                    return [$url, $sizeParams['width'], $sizeParams['height'], $intermediate];
+                } else {
+                    return [$url, $width, $height, $intermediate];
+                }
 	}
 
 	/**
