@@ -4,7 +4,7 @@ A collection of WordPress plugins for running WordPress on GCP.
 
 ## Plugins
 
-- appengine-wordpress-plugin
+- appengine-plugin
 
   A plugin for running WordPress
   on [Google App Engine Standard Environment][standard-env].
