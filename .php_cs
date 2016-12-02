@@ -17,18 +17,18 @@
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-$finder = Symfony\CS\Finder\DefaultFinder::create()
+$finder = PhpCsFixer\Finder::create()
     ->in(__DIR__ . '/gcs-media-plugin')
 ;
 
-return Symfony\CS\Config\Config::create()
-    ->level(Symfony\CS\FixerInterface::PSR2_LEVEL)
-    ->fixers([
-        'concat_with_spaces',
-        'unused_use',
-        'trailing_spaces',
-        'indentation',
-	'-psr0'
-    ])
-    ->finder($finder)
+return PhpCsFixer\Config::create()
+    ->setRules(array(
+        '@PSR2' => true,
+        'concat_space' => array('spacing' => 'one'),
+        'no_unused_imports' => true,
+        'no_trailing_whitespace' => true,
+	'no_whitespace_in_blank_line' => true,
+        'indentation_type' => true
+    ))
+    ->setFinder($finder)
 ;
