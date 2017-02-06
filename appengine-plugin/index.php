@@ -1,2 +1,2 @@
 <?php
-// Prevent directory listing
+// Silence is golden.
