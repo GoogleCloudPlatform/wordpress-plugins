@@ -37,7 +37,7 @@ do
     fi
     echo "running phpunit in ${DIR}"
     bin/install-wp-tests.sh wordpress_test root '' ${DB_HOST} ${WP_VERSION}
-    ${HOME}/bin/phpunit
+    phpunit
     if [ -f build/logs/clover.xml ]; then
         cp build/logs/clover.xml \
             ${TEST_BUILD_DIR}/build/logs/clover-${DIR//\//_}.xml

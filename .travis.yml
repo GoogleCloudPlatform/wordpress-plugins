@@ -17,6 +17,7 @@ env:
     - GOOGLE_APPLICATION_CREDENTIALS=${HOME}/credentials.json
     - INSTALL_PHPUNIT=true
     - DB_HOST=localhost
+    - PATH=${HOME}/bin:${PATH}
 
 matrix:
   include:
