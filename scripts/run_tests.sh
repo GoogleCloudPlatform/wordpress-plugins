@@ -20,6 +20,14 @@ if [ "${RUN_CS_FIXER}" = "true" ]; then
     ${HOME}/php-cs-fixer fix --dry-run --diff
 fi
 
+# download phpunit 5.7
+if [ "${INSTALL_PHPUNIT}" = "true" ]; then
+    mkdir -p ${HOME}/bin
+    wget https://phar.phpunit.de/phpunit-5.7.phar
+    mv phpunit-5.7.phar ${HOME}/bin/phpunit
+    chmod +x ${HOME}/bin/phpunit
+fi
+
 # loop through all directories containing "phpunit.xml*" and run them
 find * -name 'phpunit.xml*' -not -path '*/vendor/*' -exec dirname {} \; | while read DIR
 do
@@ -28,8 +36,8 @@ do
         composer install
     fi
     echo "running phpunit in ${DIR}"
-    bin/install-wp-tests.sh wordpress_test root '' localhost ${WP_VERSION}
-    phpunit
+    bin/install-wp-tests.sh wordpress_test root '' ${DB_HOST} ${WP_VERSION}
+    ${HOME}/bin/phpunit
     if [ -f build/logs/clover.xml ]; then
         cp build/logs/clover.xml \
             ${TEST_BUILD_DIR}/build/logs/clover-${DIR//\//_}.xml
