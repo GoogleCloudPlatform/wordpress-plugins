@@ -30,16 +30,17 @@ $ composer require google/cloud
 Add the following lines to your `wp-config.php`:
 
 ```php
-require_once __DIR__ . '/vendor/autoload.php';
+// Adjust the path as needed
+require_once __DIR__ . '/../vendor/autoload.php';
 
-stream_wrapper_register(
-    'gs',
-    '\Google\Cloud\Storage\CloudStorageStreamWrapper',
-    0);
+$storageClient = new Google\Cloud\Storage\StorageClient();
+$storageClient->registerStreamWrapper();
+
 ```
 
 Then enable this plugin on the WordPress admin UI, and configure your
-Google Cloud Storage bucket in the plugin setting UI.
+Google Cloud Storage bucket in the plugin setting UI. You need to set
+the default acl of the bucket where allUsers can read.
 
 After the configuration, media files will be uploaded to Google Cloud
 Storage and served from there.

@@ -5,6 +5,11 @@
  * @package Gcs
  */
 
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$storageClient = new Google\Cloud\Storage\StorageClient();
+$storageClient->registerStreamWrapper();
+
 $_tests_dir = getenv('WP_TESTS_DIR');
 if (! $_tests_dir) {
     $_tests_dir = '/tmp/wordpress-tests-lib';
