@@ -57,7 +57,6 @@ class Uploads
             return $values;
         }
         $basedir = sprintf('gs://%s/%s', $bucket, get_current_blog_id());
-        // Do we need to have an option for whether to use https?
         $use_https = get_option(self::USE_HTTPS_OPTION, false);
         $baseurl = sprintf(
             '%s://storage.googleapis.com/%s/%s',
