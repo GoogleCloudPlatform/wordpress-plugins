@@ -29,6 +29,7 @@ before_install:
   - php php-tools/scripts/dump_credentials.php
   - travis_retry php-tools/scripts/install_test_deps.sh
   - popd
+  - rm -rf /tmp/wordpress-tests-lib
   - mkdir -p build/logs
 
 script: scripts/run_tests.sh
