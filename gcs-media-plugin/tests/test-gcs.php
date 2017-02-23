@@ -131,7 +131,24 @@ class GcsPluginUnitTestCase extends \WP_UnitTestCase
         );
         \update_option(Uploads::BUCKET_OPTION, $testBucket);
         $values = Uploads::filter_upload_dir($values);
-        var_dump($values);
+        $this->assertEquals(
+            sprintf('gs://%s/1/2016/11', $testBucket),
+            $values['path']
+        );
+        $this->assertEquals('/2016/11', $values['subdir']);
+        $this->assertFalse($values['error']);
+        $this->assertEquals(
+            sprintf('https://storage.googleapis.com/%s/1/2016/11', $testBucket),
+            $values['url']
+        );
+        $this->assertEquals(
+            sprintf('gs://%s/1', $testBucket),
+            $values['basedir']
+        );
+        $this->assertEquals(
+            sprintf('https://storage.googleapis.com/%s/1', $testBucket),
+            $values['baseurl']
+        );
     }
 
     /**

@@ -3,8 +3,12 @@
     backupGlobals="false"
     colors="true"
     convertErrorsToExceptions="true"
-    convertNoticesToExceptions="true"
+    convertNoticesToExceptions="false"
     convertWarningsToExceptions="true">
+    <!--
+    Intentionally set convertNoticesToExceptions to false due to:
+    https://github.com/GoogleCloudPlatform/google-cloud-php/issues/346
+    -->
     <testsuites>
         <testsuite>
             <directory prefix="test-" suffix=".php">./tests/</directory>
