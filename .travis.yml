@@ -1,0 +1,41 @@
+language: php
+
+notifications:
+  email:
+    on_success: never
+    on_failure: change
+
+branches:
+  only:
+    - master
+
+env:
+  global:
+    - WP_VERSION=latest
+    - WP_MULTISITE=0
+    - TEST_BUILD_DIR=${TRAVIS_BUILD_DIR}
+    - GOOGLE_APPLICATION_CREDENTIALS=${HOME}/credentials.json
+    - INSTALL_PHPUNIT=true
+    - DB_HOST=localhost
+    - PATH=${HOME}/bin:${PATH}
+
+matrix:
+  include:
+    - php: 5.6
+      env: RUN_CS_FIXER=true
+    - php: 7.0
+    - php: 7.1
+
+before_install:
+  - pushd ${HOME}
+  - git clone https://github.com/GoogleCloudPlatform/php-tools.git
+  - php php-tools/scripts/dump_credentials.php
+  - travis_retry php-tools/scripts/install_test_deps.sh
+  - popd
+  - mkdir -p build/logs
+
+script: scripts/run_tests.sh
+
+after_success:
+  - composer require "satooshi/php-coveralls:^1.0"
+  - travis_retry php vendor/bin/coveralls -v
