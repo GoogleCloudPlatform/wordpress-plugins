@@ -3,7 +3,7 @@
 Plugin Name: Google Cloud Storage plugin
 Plugin URI:  http://wordpress.org/plugins/gcs/
 Description: A plugin for uploading media files to Google Cloud Storage
-Version:     0.1
+Version:     0.1.1
 Author:      Google Inc
 Author URI:  http://cloud.google.com/
 License:     GPL2
@@ -29,6 +29,11 @@ Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 namespace Google\Cloud\Storage\WordPress;
+
+require_once __DIR__ . '/vendor/autoload.php';
+
+$storageClient = new \Google\Cloud\Storage\StorageClient();
+$storageClient->registerStreamWrapper();
 
 define(__NAMESPACE__ . '\\PLUGIN_DIR', __DIR__);
 define(__NAMESPACE__ . '\\PLUGIN_PATH', __FILE__);
