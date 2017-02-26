@@ -2,8 +2,8 @@
 Contributors: Google
 Tags: google, Google Cloud Storage
 Requires at least: 3
-Tested up to: 4.6.1
-Stable tag: 0.1.1
+Stable tag: 0.1.2
+Tested up to: 4.7.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -27,6 +27,9 @@ After the configuration, media files will be uploaded to Google Cloud
 Storage and served from there.
 
 == Changelog ==
+
+= 0.1.2 =
+* Added "Tested up to" field to the readme
 
 = 0.1.1 =
 * Bundle vendor dir in the zip file
