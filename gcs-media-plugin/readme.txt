@@ -1,5 +1,5 @@
 === Google Cloud Storage plugin ===
-Contributors: Google
+Contributors: google
 Tags: google, Google Cloud Storage
 Requires at least: 3
 Stable tag: 0.1.3
