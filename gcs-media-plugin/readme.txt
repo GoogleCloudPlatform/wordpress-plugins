@@ -52,6 +52,12 @@ Q. How to configure the default ACL on my Google Cloud Storage bucket?
 
 A. See: https://wordpress.org/support/topic/google-storage-not-work/page/2/#post-8897852
 
+Q. Uploads result in a 0-byte file being created in your bucket accompanied by an exception stating "PHP Fatal error: Uncaught exception 'Google\\Cloud\\Core\\Exception\\BadRequestException' with message 'Client error:..'"
+
+A. Install php5-curl and restart apache: 
+sudo apt-get update && sudo apt-get install -y php5-curl 
+sudo service apache2 restart
+
 == Changelog ==
 
 = 0.1.3 =
