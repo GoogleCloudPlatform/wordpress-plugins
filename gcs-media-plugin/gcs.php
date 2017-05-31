@@ -62,7 +62,6 @@ function options_page_view()
         </form>
     </div>
     <?php
-
 }
 
 /**
