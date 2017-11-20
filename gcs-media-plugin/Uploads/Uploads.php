@@ -137,7 +137,8 @@ class Uploads
                 . '<strong>Note:</strong>This setting only affects new uploads,'
                 . ' it will not change the HTTP scheme for files previously '
                 . 'uploaded',
-                'gcp')
+                'gcp'
+            )
             . '</p>';
     }
 
@@ -151,7 +152,8 @@ class Uploads
             add_settings_error(
                 'gcs_settings',
                 'invalid-bucket',
-                __('The bucket does not exist, or is not writable', 'gcp'));
+                __('The bucket does not exist, or is not writable', 'gcp')
+            );
             return get_option(self::BUCKET_OPTION, '');
         }
         return $input;
