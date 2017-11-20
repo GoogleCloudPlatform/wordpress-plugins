@@ -53,12 +53,12 @@ function options_page_view()
             <?php
             // output security fields for the registered setting "gcs_settings"
             settings_fields('gcs_settings');
-            // output setting sections and their fields (sections are
-            // registered for "gcs", each field is registered to a specific
-            // section)
-            do_settings_sections('gcs');
-            // output save settings button
-            submit_button(__('Save Settings', 'gcs')); ?>
+    // output setting sections and their fields (sections are
+    // registered for "gcs", each field is registered to a specific
+    // section)
+    do_settings_sections('gcs');
+    // output save settings button
+    submit_button(__('Save Settings', 'gcs')); ?>
         </form>
     </div>
     <?php
