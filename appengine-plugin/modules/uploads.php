@@ -485,38 +485,38 @@ class Uploads {
     }
   }
 
-	private static function verify_signed_auth_key($key_name, $string_to_verify, $signature_to_verify) {
-		if (self::is_production()) {
+  private static function verify_signed_auth_key($key_name, $string_to_verify, $signature_to_verify) {
+    if (self::is_production()) {
 
-			# get list of all valid certificates for GAE project
-			$public_certificates = AppIdentityService::getPublicCertificates();
+      # get list of all valid certificates for GAE project
+      $public_certificates = AppIdentityService::getPublicCertificates();
 
-			# find certificate with matching key name
-			foreach ($public_certificates as $cert) {
-				if ($cert->getCertificateName() === $key_name) {
+      # find certificate with matching key name
+      foreach ($public_certificates as $cert) {
+        if ($cert->getCertificateName() === $key_name) {
 
-					# extract public key from X509 certificate
-					$public_key = openssl_pkey_get_public($cert->getX509CertificateInPemFormat());
+          # extract public key from X509 certificate
+          $public_key = openssl_pkey_get_public($cert->getX509CertificateInPemFormat());
 
-					# verify the signed data, return true or false
-					return (openssl_verify($string_to_verify, $signature_to_verify, $public_key, "sha256") === 1);
-				}
-			}
+          # verify the signed data, return true or false
+          return (openssl_verify($string_to_verify, $signature_to_verify, $public_key, "sha256") === 1);
+        }
+      }
 
-			# if no matching certificate, verification fails
-			return false;
+      # if no matching certificate, verification fails
+      return false;
 
-		} else {
-			// In the development server we are not concerned with trying to generate
-			// a secure signature.
-			return (sha1($string_to_verify) === $signature_to_verify);
-		}
-	}
+    } else {
+      // In the development server we are not concerned with trying to generate
+      // a secure signature.
+      return (sha1($string_to_verify) === $signature_to_verify);
+    }
+  }
 
-	public static function custom_image_editor( $editors ) {
-		$editors = [ __NAMESPACE__ . '\\Editor' ] + $editors;
-		return $editors;
-	}
+  public static function custom_image_editor( $editors ) {
+    $editors = [ __NAMESPACE__ . '\\Editor' ] + $editors;
+      return $editors;
+  }
 }
 
 /**
