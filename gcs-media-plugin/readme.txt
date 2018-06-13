@@ -4,6 +4,7 @@ Tags: google, Google Cloud Storage
 Requires at least: 3
 Stable tag: 0.1.3
 Tested up to: 4.8
+Requires PHP: 5.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
