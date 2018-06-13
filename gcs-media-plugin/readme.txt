@@ -41,30 +41,31 @@ you will need to do the following:
   
 * Stop the instance.
 
-* Once the instance has stopped, click "Edit" and you can now modify 
-  the scopes under "Cloud API access scopes". Change the Storage scope
-  from "Read Only" to "Full".
+* Once the instance has stopped, click **Edit** and you can now
+  modify the scopes under **Cloud API access scopes**. Change
+  the Storage scope from **Read Only** to **Full**.
 
 If you want to run this plugin outside of Google Cloud Platform, you
 need to configure your service account as follows:
 
-* Visit Cloud Console, go to `IAM & Admin` -> `Service accounts` and
-  create a service account with `Storage Object Admin` permission and
-  download the json key file.
+* Visit Cloud Console, go to `IAM & Admin` -> `Service accounts`
+  and create a service account with `Storage Object Admin`
+  permission and download the json key file.
 
-* Upload the json key file to the hosting server. Don't put it in a
-  public serving area.
+* Upload the json key file to the hosting server. Don't put it 
+  in a public serving area.
 
-* Add the following line to wp-config.php (replace the file path with
-  the real one).
+* Add the following line to wp-config.php (replace the file path
+  with the real one).
+
   ```
   putenv('GOOGLE_APPLICATION_CREDENTIALS=/secure-place/my-service-account.json');
 ```
 
 == Frequently Asked Questions ==
 
-Q. The plugin crashes with `No project ID was provided, and we were
-unable to detect a default project ID`, what's wrong?
+Q. The plugin crashes with `No project ID was provided, and we
+were unable to detect a default project ID`, what's wrong?
 
 A. See the section about configuring the service account in the
 `Installation` section.
