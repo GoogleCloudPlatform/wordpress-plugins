@@ -26,38 +26,38 @@ Google Cloud Storage bucket.
 4. In Google Cloud Console, set the default acl of the bucket so that
    `allUsers` can read. 
 
-5. Depending on your environment, you may need to configure a Google
-   Service Account to call the APIs.
+Depending on your environment, you may need to configure a Google
+Service Account to call the APIs.
    
-** To run this plugin on **Google App Engine for PHP 7.2**, it will
-   work without additional configuration.
+To run this plugin on **Google App Engine for PHP 7.2**, it will work
+without additional configuration.
 
-** To run this plugin on **Google Compute Engine** or **App Engine 
-   Flexible**, you will need to do the following:
+To run this plugin on **Google Compute Engine** or **App Engine Flexible**,
+you will need to do the following:
 
-*** Visit Cloud Console, go to `Compute` -> `instances` and select
-       the instance where WordPress is running.
+* Visit Cloud Console, go to `Compute` -> `instances` and select
+  the instance where WordPress is running.
   
-*** Stop the instance.
+* Stop the instance.
 
-*** Once the instance has stopped, click "Edit" and you can now modify 
-    the scopes under "Cloud API access scopes". Change the Storage scope
-    from "Read Only" to "Full".
+* Once the instance has stopped, click "Edit" and you can now modify 
+  the scopes under "Cloud API access scopes". Change the Storage scope
+  from "Read Only" to "Full".
 
-** If you want to run this plugin outside of Google Cloud Platform, you
-   need to configure your service account as follows:
+If you want to run this plugin outside of Google Cloud Platform, you
+need to configure your service account as follows:
 
-*** Visit Cloud Console, go to `IAM & Admin` -> `Service accounts` and
-    create a service account with `Storage Object Admin` permission and
-    download the json key file.
+* Visit Cloud Console, go to `IAM & Admin` -> `Service accounts` and
+  create a service account with `Storage Object Admin` permission and
+  download the json key file.
 
-*** Upload the json key file to the hosting server. Don't put it in a
-    public serving area.
+* Upload the json key file to the hosting server. Don't put it in a
+  public serving area.
 
-*** Add the following line to wp-config.php (replace the file path with
-    the real one).
-    ```
-    putenv('GOOGLE_APPLICATION_CREDENTIALS=/secure-place/my-service-account.json');
+* Add the following line to wp-config.php (replace the file path with
+  the real one).
+  ```
+  putenv('GOOGLE_APPLICATION_CREDENTIALS=/secure-place/my-service-account.json');
 ```
 
 == Frequently Asked Questions ==
