@@ -1,5 +1,5 @@
 {
     "require": {
-        "google/cloud": "~0.24"
+        "google/cloud-storage": "^1.7"
     }
 }
