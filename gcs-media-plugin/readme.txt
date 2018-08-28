@@ -2,7 +2,7 @@
 Contributors: google
 Tags: google, Google Cloud Storage
 Requires at least: 3
-Stable tag: 0.1.3
+Stable tag: 0.1.4
 Tested up to: 4.8
 Requires PHP: 5.5
 License: GPLv2 or later
@@ -19,17 +19,17 @@ Google Cloud Storage bucket.
 
 1. Download the plugin and place it in your `/wp-content/plugins/` directory.
 
-2. Enable this plugin in the WordPress admin UI, 
+2. Enable this plugin in the WordPress admin UI,
 
-3. Configure your Google Cloud Storage bucket in the plugin setting 
-   UI. 
-   
+3. Configure your Google Cloud Storage bucket in the plugin setting
+   UI.
+
 4. In Google Cloud Console, set the default acl of the bucket so that
-   `allUsers` can read. 
+   `allUsers` can read.
 
 Depending on your environment, you may need to configure a Google
 Service Account to call the APIs.
-   
+
 To run this plugin on **Google App Engine for PHP 7.2**, it will work
 without additional configuration.
 
@@ -38,7 +38,7 @@ you will need to do the following:
 
 * Visit Cloud Console, go to `Compute` -> `instances` and select
   the instance where WordPress is running.
-  
+
 * Stop the instance.
 
 * Once the instance has stopped, click **Edit** and you can now
@@ -52,7 +52,7 @@ need to configure your service account as follows:
   and create a service account with `Storage Object Admin`
   permission and download the json key file.
 
-* Upload the json key file to the hosting server. Don't put it 
+* Upload the json key file to the hosting server. Don't put it
   in a public serving area.
 
 * Add the following line to wp-config.php (replace the file path
@@ -75,6 +75,10 @@ Q. How to configure the default ACL on my Google Cloud Storage bucket?
 A. See: https://wordpress.org/support/topic/google-storage-not-work/page/2/#post-8897852
 
 == Changelog ==
+
+= 0.1.4 =
+* Uses the most recent release of the Google Cloud Storage client library
+* Updates all dependencies
 
 = 0.1.3 =
 * Added a section for configuring service account to the readme
