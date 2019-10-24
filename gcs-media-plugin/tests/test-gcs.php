@@ -201,4 +201,29 @@ class GcsPluginUnitTestCase extends \WP_UnitTestCase
         $result = Uploads::validate_use_https(1);
         $this->assertTrue($result);
     }
+
+    /**
+     * A test for validate_use_https.
+     */
+    public function test_get_google_api_client_header()
+    {
+        $header = \Google\Cloud\Storage\WordPress\register_settings();
+        $headerValues = [];
+        foreach(explode(' ', $header) as $part) {
+            list($key, $val) = explode('/', $part);
+            $headerValues[$key] = $val;
+        }
+        $this->assertEquals(4, count($headerValues));
+        $this->assertArrayHasKey('gl-php', $headerValues);
+        $this->assertEquals(PHP_VERSION, $headerValues['gl-php']);
+        $this->assertArrayHasKey('gccl', $headerValues);
+        $this->assertArrayHasKey('wp', $headerValues);
+        global $wp_version;
+        $this->assertEquals($wp_version, $headerValues['wp']);
+        $this->assertArrayHasKey('wp-gcs', $headerValues);
+        $this->assertEquals(
+            \Google\Cloud\Storage\WordPress\PLUGIN_VERSION,
+            $headerValues['wp-gcs']
+        );
+    }
 }
