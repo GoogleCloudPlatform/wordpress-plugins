@@ -207,7 +207,7 @@ class GcsPluginUnitTestCase extends \WP_UnitTestCase
      */
     public function test_get_google_api_client_header()
     {
-        $header = \Google\Cloud\Storage\WordPress\register_settings();
+        $header = \Google\Cloud\Storage\WordPress\get_google_api_client_header();
         $headerValues = [];
         foreach(explode(' ', $header) as $part) {
             list($key, $val) = explode('/', $part);
