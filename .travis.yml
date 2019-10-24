@@ -44,4 +44,4 @@ script:
 
 after_success:
   - composer global require "php-coveralls/php-coveralls:^2.1"
-  - travis_retry coveralls -v
+  - travis_retry php-coveralls -v
