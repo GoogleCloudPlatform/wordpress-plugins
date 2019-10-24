@@ -3,7 +3,7 @@
 Plugin Name: Google Cloud Storage plugin
 Plugin URI:  http://wordpress.org/plugins/gcs/
 Description: A plugin for uploading media files to Google Cloud Storage
-Version:     0.1.3
+Version:     0.1.5
 Author:      Google Inc
 Author URI:  http://cloud.google.com/
 License:     GPL2
@@ -32,11 +32,20 @@ namespace Google\Cloud\Storage\WordPress;
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-$storageClient = new \Google\Cloud\Storage\StorageClient();
-$storageClient->registerStreamWrapper();
+use Google\Cloud\Storage\StorageClient;
 
 define(__NAMESPACE__ . '\\PLUGIN_DIR', __DIR__);
 define(__NAMESPACE__ . '\\PLUGIN_PATH', __FILE__);
+define(__NAMESPACE__ . '\\PLUGIN_VERSION', '0.1.5');
+
+$storageClient = new StorageClient([
+    'restOptions' => [
+        'headers' => [
+            'x-goog-api-client' => get_google_api_client_header(),
+        ]
+    ]
+]);
+$storageClient->registerStreamWrapper();
 
 /**
  * Render the options page.
@@ -107,6 +116,22 @@ function settings_link($links, $file)
 function register_settings()
 {
     do_action('gcs_register_settings');
+}
+
+/**
+ * Get the current "x-goog-api-client" string containing plugin and WordPress
+ * versions.
+ */
+function get_google_api_client_header()
+{
+    global $wp_version;
+    return sprintf(
+        'gl-php/%s gccl/%s wp-gcs/%s wp/%s',
+        PHP_VERSION,
+        StorageClient::VERSION,
+        PLUGIN_VERSION,
+        $wp_version
+    );
 }
 
 register_activation_hook(__FILE__, __NAMESPACE__ . '\\activation_hook');
