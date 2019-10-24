@@ -43,5 +43,5 @@ script:
 - scripts/run_tests.sh
 
 after_success:
-  - composer require "satooshi/php-coveralls:^1.0"
-  - travis_retry php vendor/bin/coveralls -v
+  - composer global require "php-coveralls/php-coveralls:^2.1"
+  - travis_retry coveralls -v
