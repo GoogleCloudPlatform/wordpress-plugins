@@ -17,7 +17,7 @@ env:
     - GOOGLE_APPLICATION_CREDENTIALS=${HOME}/credentials.json
     - DB_HOST=localhost
     - COMPOSER_BIN_DIR=$(composer global config bin-dir --absolute)
-    - PATH=${COMPOSER_BIN_DIR}:${PATH}
+    - PATH=${HOME}/google-cloud-sdk/bin:${COMPOSER_BIN_DIR}:${PATH}
 
 matrix:
   include:
@@ -27,7 +27,7 @@ matrix:
     - php: 7.1
 
 before_install:
-  - composer global require phpunit/phpunit:^7 google/cloud-tools:dev-master
+  - composer global require phpunit/phpunit:^5.7 google/cloud-tools:dev-master
   - dump_credentials.php
   - install_test_deps.sh --gcloud
   - if [ "$RUN_CS_FIXER" = "true" ]; then install_test_deps.sh --cs-fixer; fi
