@@ -33,18 +33,13 @@ namespace Google\Cloud\Storage\WordPress;
 require_once __DIR__ . '/vendor/autoload.php';
 
 use Google\Cloud\Storage\StorageClient;
+use Google\Auth\HttpHandler\HttpHandlerFactory;
 
 define(__NAMESPACE__ . '\\PLUGIN_DIR', __DIR__);
 define(__NAMESPACE__ . '\\PLUGIN_PATH', __FILE__);
 define(__NAMESPACE__ . '\\PLUGIN_VERSION', '0.1.5');
 
-$storageClient = new StorageClient([
-    'restOptions' => [
-        'headers' => [
-            'x-goog-api-client' => get_google_api_client_header(),
-        ]
-    ]
-]);
+$storageClient = get_google_storage_client();
 $storageClient->registerStreamWrapper();
 
 /**
@@ -119,16 +114,38 @@ function register_settings()
 }
 
 /**
+ * Returns a configured instance of the Google Cloud Storage API client.
+ * @return StorageClient
+ */
+function get_google_storage_client($httpHandler = null)
+{
+    return new StorageClient([
+        'httpHandler' => function($request, $options) use ($httpHandler) {
+            $xGoogApiClientHeader = $request->getHeaderLine('x-goog-api-client');
+            $request = $request->withHeader(
+                'x-goog-api-client',
+                $xGoogApiClientHeader . ' ' . get_wp_info_header()
+            );
+
+            // Call default HTTP handler
+            return call_user_func_array(
+                $httpHandler ?: HttpHandlerFactory::build(),
+                [$request, $options]
+            );
+        },
+        'authHttpHandler' => HttpHandlerFactory::build(),
+    ]);
+}
+
+/**
  * Get the current "x-goog-api-client" string containing plugin and WordPress
  * versions.
  */
-function get_google_api_client_header()
+function get_wp_info_header()
 {
     global $wp_version;
     return sprintf(
-        'gl-php/%s gccl/%s wp-gcs/%s wp/%s',
-        PHP_VERSION,
-        StorageClient::VERSION,
+        'wp-gcs/%s wp/%s',
         PLUGIN_VERSION,
         $wp_version
     );

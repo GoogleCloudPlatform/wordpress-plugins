@@ -203,20 +203,53 @@ class GcsPluginUnitTestCase extends \WP_UnitTestCase
     }
 
     /**
-     * A test for validate_use_https.
+     * A test for getting the StorageClient
      */
-    public function test_get_google_api_client_header()
+    public function test_get_storage_client()
     {
-        $header = \Google\Cloud\Storage\WordPress\get_google_api_client_header();
-        $headerValues = [];
-        foreach (explode(' ', $header) as $part) {
-            list($key, $val) = explode('/', $part);
-            $headerValues[$key] = $val;
+        $testBucket = getenv('TEST_BUCKET');
+        if ($testBucket === false) {
+            $this->markTestSkipped('TEST_BUCKET envvar is not set');
         }
-        $this->assertEquals(4, count($headerValues));
-        $this->assertArrayHasKey('gl-php', $headerValues);
-        $this->assertEquals(PHP_VERSION, $headerValues['gl-php']);
-        $this->assertArrayHasKey('gccl', $headerValues);
+        $callCount = 0;
+        $storage = \Google\Cloud\Storage\WordPress\get_google_storage_client(
+            function ($request, $options) use (&$callCount) {
+                $callCount++;
+                $headerValues = $this->splitInfoHeader(
+                    $request->getHeaderLine('x-goog-api-client')
+                );
+                $this->assertEquals(4, count($headerValues));
+                $this->assertArrayHasKey('gl-php', $headerValues);
+                $this->assertEquals(PHP_VERSION, $headerValues['gl-php']);
+                $this->assertArrayHasKey('gccl', $headerValues);
+                $this->assertEquals(
+                    \Google\Cloud\Storage\StorageClient::VERSION,
+                    $headerValues['gccl']
+                );
+                $this->assertArrayHasKey('wp', $headerValues);
+                $this->assertArrayHasKey('wp-gcs', $headerValues);
+
+                $response = $this->createMock('Psr\Http\Message\ResponseInterface');
+                $response->method('getBody')->will(
+                    $this->returnValue('{"name": "", "generation": ""}')
+                );
+                return $response;
+            }
+        );
+        // make an API call
+        $bucket = $storage->bucket($testBucket);
+        $bucket->upload(__FILE__, ['name' => 'foo']);
+        $this->assertEquals(1, $callCount);
+    }
+
+    /**
+     * A test for test_get_wp_info_header.
+     */
+    public function test_get_wp_info_header()
+    {
+        $header = \Google\Cloud\Storage\WordPress\get_wp_info_header();
+        $headerValues = $this->splitInfoHeader($header);
+        $this->assertEquals(2, count($headerValues));
         $this->assertArrayHasKey('wp', $headerValues);
         global $wp_version;
         $this->assertEquals($wp_version, $headerValues['wp']);
@@ -225,5 +258,15 @@ class GcsPluginUnitTestCase extends \WP_UnitTestCase
             \Google\Cloud\Storage\WordPress\PLUGIN_VERSION,
             $headerValues['wp-gcs']
         );
+    }
+
+    private function splitInfoHeader($header)
+    {
+        $headerValues = [];
+        foreach (explode(' ', $header) as $part) {
+            list($key, $val) = explode('/', $part);
+            $headerValues[$key] = $val;
+        }
+        return $headerValues;
     }
 }
