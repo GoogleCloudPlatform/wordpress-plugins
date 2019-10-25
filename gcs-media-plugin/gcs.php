@@ -120,7 +120,7 @@ function register_settings()
 function get_google_storage_client($httpHandler = null)
 {
     return new StorageClient([
-        'httpHandler' => function($request, $options) use ($httpHandler) {
+        'httpHandler' => function ($request, $options) use ($httpHandler) {
             $xGoogApiClientHeader = $request->getHeaderLine('x-goog-api-client');
             $request = $request->withHeader(
                 'x-goog-api-client',

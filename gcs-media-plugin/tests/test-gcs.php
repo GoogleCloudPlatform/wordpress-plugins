@@ -211,24 +211,12 @@ class GcsPluginUnitTestCase extends \WP_UnitTestCase
         if ($testBucket === false) {
             $this->markTestSkipped('TEST_BUCKET envvar is not set');
         }
-        $callCount = 0;
+        $req = null;
         $storage = \Google\Cloud\Storage\WordPress\get_google_storage_client(
-            function ($request, $options) use (&$callCount) {
-                $callCount++;
-                $headerValues = $this->splitInfoHeader(
-                    $request->getHeaderLine('x-goog-api-client')
-                );
-                $this->assertEquals(4, count($headerValues));
-                $this->assertArrayHasKey('gl-php', $headerValues);
-                $this->assertEquals(PHP_VERSION, $headerValues['gl-php']);
-                $this->assertArrayHasKey('gccl', $headerValues);
-                $this->assertEquals(
-                    \Google\Cloud\Storage\StorageClient::VERSION,
-                    $headerValues['gccl']
-                );
-                $this->assertArrayHasKey('wp', $headerValues);
-                $this->assertArrayHasKey('wp-gcs', $headerValues);
-
+            function ($request, $options) use (&$req) {
+                // Store request in local variable for testing
+                $req = $request;
+                // Return a mock response
                 $response = $this->createMock('Psr\Http\Message\ResponseInterface');
                 $response->method('getBody')->will(
                     $this->returnValue('{"name": "", "generation": ""}')
@@ -236,10 +224,25 @@ class GcsPluginUnitTestCase extends \WP_UnitTestCase
                 return $response;
             }
         );
+
         // make an API call
         $bucket = $storage->bucket($testBucket);
         $bucket->upload(__FILE__, ['name' => 'foo']);
-        $this->assertEquals(1, $callCount);
+
+        $this->assertNotNull($req);
+        $headerValues = $this->splitInfoHeader(
+            $req->getHeaderLine('x-goog-api-client')
+        );
+        $this->assertEquals(4, count($headerValues));
+        $this->assertArrayHasKey('gl-php', $headerValues);
+        $this->assertEquals(PHP_VERSION, $headerValues['gl-php']);
+        $this->assertArrayHasKey('gccl', $headerValues);
+        $this->assertEquals(
+            \Google\Cloud\Storage\StorageClient::VERSION,
+            $headerValues['gccl']
+        );
+        $this->assertArrayHasKey('wp', $headerValues);
+        $this->assertArrayHasKey('wp-gcs', $headerValues);
     }
 
     /**
