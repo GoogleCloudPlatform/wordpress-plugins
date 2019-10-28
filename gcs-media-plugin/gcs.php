@@ -115,10 +115,13 @@ function register_settings()
 
 /**
  * Returns a configured instance of the Google Cloud Storage API client.
+ *
+ * @param callable $httpHandler [optional] Http Handler to invoke the API call.
  * @return StorageClient
  */
-function get_google_storage_client($httpHandler = null)
+function get_google_storage_client(callable $httpHandler = null)
 {
+    $httpHandler = $httpHandler ?: HttpHandlerFactory::build();
     return new StorageClient([
         'httpHandler' => function ($request, $options) use ($httpHandler) {
             $xGoogApiClientHeader = $request->getHeaderLine('x-goog-api-client');
@@ -128,10 +131,7 @@ function get_google_storage_client($httpHandler = null)
             );
 
             // Call default HTTP handler
-            return call_user_func_array(
-                $httpHandler ?: HttpHandlerFactory::build(),
-                [$request, $options]
-            );
+            return call_user_func_array($httpHandler, [$request, $options]);
         },
         'authHttpHandler' => HttpHandlerFactory::build(),
     ]);
@@ -144,11 +144,8 @@ function get_google_storage_client($httpHandler = null)
 function get_wp_info_header()
 {
     global $wp_version;
-    return sprintf(
-        'wp-gcs/%s wp/%s',
-        PLUGIN_VERSION,
-        $wp_version
-    );
+
+    return sprintf('wp-gcs/%s wp/%s', PLUGIN_VERSION, $wp_version);
 }
 
 register_activation_hook(__FILE__, __NAMESPACE__ . '\\activation_hook');
