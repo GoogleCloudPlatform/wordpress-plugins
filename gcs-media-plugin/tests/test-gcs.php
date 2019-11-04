@@ -17,6 +17,8 @@
 
 namespace Google\Cloud\Storage\WordPress\Test;
 
+use Google\Cloud\Storage\StorageClient;
+use Google\Cloud\Storage\WordPress;
 use Google\Cloud\Storage\WordPress\Uploads\Uploads;
 
 /**
@@ -32,7 +34,7 @@ class GcsPluginUnitTestCase extends \WP_UnitTestCase
     {
         // Nothing for normal user
         ob_start();
-        \Google\Cloud\Storage\WordPress\options_page_view();
+        WordPress\options_page_view();
         $html = ob_get_clean();
         $this->assertEmpty($html);
 
@@ -42,7 +44,7 @@ class GcsPluginUnitTestCase extends \WP_UnitTestCase
         );
         \wp_set_current_user($user_id);
         ob_start();
-        \Google\Cloud\Storage\WordPress\options_page_view();
+        WordPress\options_page_view();
         $html = ob_get_clean();
         $this->assertRegexp('/form action="options.php"/', $html);
     }
@@ -53,7 +55,7 @@ class GcsPluginUnitTestCase extends \WP_UnitTestCase
     public function test_options_page()
     {
         // TODO: actually check the side effect of this call.
-        \Google\Cloud\Storage\WordPress\options_page();
+        WordPress\options_page();
     }
 
     /**
@@ -62,7 +64,7 @@ class GcsPluginUnitTestCase extends \WP_UnitTestCase
     public function test_activation_hook()
     {
         // TODO: actually check the side effect of this call.
-        \Google\Cloud\Storage\WordPress\activation_hook();
+        WordPress\activation_hook();
     }
 
     /**
@@ -71,9 +73,9 @@ class GcsPluginUnitTestCase extends \WP_UnitTestCase
     public function test_settings_link()
     {
         $links = [];
-        $links = \Google\Cloud\Storage\WordPress\settings_link(
+        $links = WordPress\settings_link(
             $links,
-            \plugin_basename(\Google\Cloud\Storage\WordPress\PLUGIN_PATH)
+            \plugin_basename(WordPress\PLUGIN_PATH)
         );
         $this->assertRegexp('/options-general.php\\?page=gcs/', $links[0]);
     }
@@ -87,7 +89,7 @@ class GcsPluginUnitTestCase extends \WP_UnitTestCase
         $ssl = get_option(Uploads::USE_HTTPS_OPTION);
         $this->assertFalse($ssl);
         // We have the option set to true (1).
-        \Google\Cloud\Storage\WordPress\register_settings();
+        WordPress\register_settings();
         $ssl = get_option(Uploads::USE_HTTPS_OPTION);
         $this->assertEquals(1, $ssl);
     }
@@ -111,7 +113,7 @@ class GcsPluginUnitTestCase extends \WP_UnitTestCase
      */
     public function test_filter_upload_dir()
     {
-        \Google\Cloud\Storage\WordPress\register_settings();
+        WordPress\register_settings();
         // It does nothing without setting the option.
         $values = array();
         $values = Uploads::filter_upload_dir($values);
@@ -200,5 +202,70 @@ class GcsPluginUnitTestCase extends \WP_UnitTestCase
         $this->assertFalse($result);
         $result = Uploads::validate_use_https(1);
         $this->assertTrue($result);
+    }
+
+    /**
+     * A test for getting the StorageClient
+     */
+    public function test_get_storage_client()
+    {
+        $testBucket = getenv('TEST_BUCKET');
+        if ($testBucket === false) {
+            $this->markTestSkipped('TEST_BUCKET envvar is not set');
+        }
+        $req = null;
+        $storage = WordPress\get_google_storage_client(
+            function ($request, $options) use (&$req) {
+                // Store request in local variable for testing
+                $req = $request;
+                // Return a mock response
+                $response = $this->createMock('Psr\Http\Message\ResponseInterface');
+                $response->method('getBody')->will(
+                    $this->returnValue('{"name": "", "generation": ""}')
+                );
+                return $response;
+            }
+        );
+
+        // make an API call
+        $bucket = $storage->bucket($testBucket);
+        $bucket->upload(__FILE__, ['name' => 'foo']);
+
+        $this->assertNotNull($req);
+        $headerValues = $this->splitInfoHeader(
+            $req->getHeaderLine('x-goog-api-client')
+        );
+        $this->assertEquals(4, count($headerValues));
+        $this->assertArrayHasKey('gl-php', $headerValues);
+        $this->assertEquals(PHP_VERSION, $headerValues['gl-php']);
+        $this->assertArrayHasKey('gccl', $headerValues);
+        $this->assertEquals(StorageClient::VERSION, $headerValues['gccl']);
+        $this->assertArrayHasKey('wp', $headerValues);
+        $this->assertArrayHasKey('wp-gcs', $headerValues);
+    }
+
+    /**
+     * A test for test_get_wp_info_header.
+     */
+    public function test_get_wp_info_header()
+    {
+        $header = WordPress\get_wp_info_header();
+        $headerValues = $this->splitInfoHeader($header);
+        $this->assertEquals(2, count($headerValues));
+        $this->assertArrayHasKey('wp', $headerValues);
+        global $wp_version;
+        $this->assertEquals($wp_version, $headerValues['wp']);
+        $this->assertArrayHasKey('wp-gcs', $headerValues);
+        $this->assertEquals(WordPress\PLUGIN_VERSION, $headerValues['wp-gcs']);
+    }
+
+    private function splitInfoHeader($header)
+    {
+        $headerValues = [];
+        foreach (explode(' ', $header) as $part) {
+            list($key, $val) = explode('/', $part);
+            $headerValues[$key] = $val;
+        }
+        return $headerValues;
     }
 }

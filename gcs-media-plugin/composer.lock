@@ -57,12 +57,12 @@
             "version": "v1.3.3",
             "source": {
                 "type": "git",
-                "url": "https://github.com/google/google-auth-library-php.git",
+                "url": "https://github.com/googleapis/google-auth-library-php.git",
                 "reference": "af72b3f50420c801dc35cc07b1fa429ae027b847"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/google/google-auth-library-php/zipball/af72b3f50420c801dc35cc07b1fa429ae027b847",
+                "url": "https://api.github.com/repos/googleapis/google-auth-library-php/zipball/af72b3f50420c801dc35cc07b1fa429ae027b847",
                 "reference": "af72b3f50420c801dc35cc07b1fa429ae027b847",
                 "shasum": ""
             },
@@ -104,12 +104,12 @@
             "version": "v1.23.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/GoogleCloudPlatform/google-cloud-php-core.git",
+                "url": "https://github.com/googleapis/google-cloud-php-core.git",
                 "reference": "44b3bb512a7a445bd4ecafbdc86ed7c142e58f9f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/GoogleCloudPlatform/google-cloud-php-core/zipball/44b3bb512a7a445bd4ecafbdc86ed7c142e58f9f",
+                "url": "https://api.github.com/repos/googleapis/google-cloud-php-core/zipball/44b3bb512a7a445bd4ecafbdc86ed7c142e58f9f",
                 "reference": "44b3bb512a7a445bd4ecafbdc86ed7c142e58f9f",
                 "shasum": ""
             },
@@ -160,16 +160,16 @@
         },
         {
             "name": "google/cloud-storage",
-            "version": "v1.7.1",
+            "version": "v1.9.4",
             "source": {
                 "type": "git",
-                "url": "https://github.com/GoogleCloudPlatform/google-cloud-php-storage.git",
-                "reference": "5ee955f9e19984659ec74ba2331841a53bca3c13"
+                "url": "https://github.com/googleapis/google-cloud-php-storage.git",
+                "reference": "3d4787335fbdcae02df3be4918d17184027f3159"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/GoogleCloudPlatform/google-cloud-php-storage/zipball/5ee955f9e19984659ec74ba2331841a53bca3c13",
-                "reference": "5ee955f9e19984659ec74ba2331841a53bca3c13",
+                "url": "https://api.github.com/repos/googleapis/google-cloud-php-storage/zipball/3d4787335fbdcae02df3be4918d17184027f3159",
+                "reference": "3d4787335fbdcae02df3be4918d17184027f3159",
                 "shasum": ""
             },
             "require": {
@@ -191,7 +191,7 @@
             "extra": {
                 "component": {
                     "id": "cloud-storage",
-                    "target": "GoogleCloudPlatform/google-cloud-php-storage.git",
+                    "target": "googleapis/google-cloud-php-storage.git",
                     "path": "Storage",
                     "entry": "src/StorageClient.php"
                 }
@@ -206,7 +206,7 @@
                 "Apache-2.0"
             ],
             "description": "Cloud Storage Client for PHP",
-            "time": "2018-08-20T17:02:50+00:00"
+            "time": "2018-11-27T19:21:13+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",

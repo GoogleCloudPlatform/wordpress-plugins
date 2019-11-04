@@ -3,7 +3,7 @@
 Plugin Name: Google Cloud Storage plugin
 Plugin URI:  http://wordpress.org/plugins/gcs/
 Description: A plugin for uploading media files to Google Cloud Storage
-Version:     0.1.3
+Version:     0.1.5
 Author:      Google Inc
 Author URI:  http://cloud.google.com/
 License:     GPL2
@@ -32,11 +32,15 @@ namespace Google\Cloud\Storage\WordPress;
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-$storageClient = new \Google\Cloud\Storage\StorageClient();
-$storageClient->registerStreamWrapper();
+use Google\Cloud\Storage\StorageClient;
+use Google\Auth\HttpHandler\HttpHandlerFactory;
 
 define(__NAMESPACE__ . '\\PLUGIN_DIR', __DIR__);
 define(__NAMESPACE__ . '\\PLUGIN_PATH', __FILE__);
+define(__NAMESPACE__ . '\\PLUGIN_VERSION', '0.1.5');
+
+$storageClient = get_google_storage_client();
+$storageClient->registerStreamWrapper();
 
 /**
  * Render the options page.
@@ -107,6 +111,41 @@ function settings_link($links, $file)
 function register_settings()
 {
     do_action('gcs_register_settings');
+}
+
+/**
+ * Returns a configured instance of the Google Cloud Storage API client.
+ *
+ * @param callable $httpHandler [optional] Http Handler to invoke the API call.
+ * @return StorageClient
+ */
+function get_google_storage_client(callable $httpHandler = null)
+{
+    $httpHandler = $httpHandler ?: HttpHandlerFactory::build();
+    return new StorageClient([
+        'httpHandler' => function ($request, $options) use ($httpHandler) {
+            $xGoogApiClientHeader = $request->getHeaderLine('x-goog-api-client');
+            $request = $request->withHeader(
+                'x-goog-api-client',
+                $xGoogApiClientHeader . ' ' . get_wp_info_header()
+            );
+
+            // Call default HTTP handler
+            return call_user_func_array($httpHandler, [$request, $options]);
+        },
+        'authHttpHandler' => HttpHandlerFactory::build(),
+    ]);
+}
+
+/**
+ * Get the current "x-goog-api-client" string containing plugin and WordPress
+ * versions.
+ */
+function get_wp_info_header()
+{
+    global $wp_version;
+
+    return sprintf('wp-gcs/%s wp/%s', PLUGIN_VERSION, $wp_version);
 }
 
 register_activation_hook(__FILE__, __NAMESPACE__ . '\\activation_hook');
