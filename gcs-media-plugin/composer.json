@@ -1,5 +1,6 @@
 {
     "require": {
-        "google/cloud-storage": "^1.7"
+        "google/cloud-storage": "^1.17",
+        "guzzlehttp/guzzle": "^5.3.1 || ^6.2.1"
     }
 }
