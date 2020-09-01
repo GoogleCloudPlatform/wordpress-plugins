@@ -28,6 +28,9 @@ matrix:
       env: RUN_CS_FIXER=true
     - php: 7.0
     - php: 7.1
+    - php: 7.2
+    - php: 7.3
+    - php: 7.4
 
 before_install:
   - composer global require phpunit/phpunit:^5.7 google/cloud-tools:dev-master
