@@ -19,8 +19,7 @@ env:
     - TEST_BUILD_DIR=${TRAVIS_BUILD_DIR}
     - GOOGLE_APPLICATION_CREDENTIALS=${HOME}/credentials.json
     - DB_HOST=localhost
-    - COMPOSER_BIN_DIR=$(composer global config bin-dir --absolute)
-    - PATH=${HOME}/google-cloud-sdk/bin:${COMPOSER_BIN_DIR}:${PATH}
+    - PATH=${HOME}/google-cloud-sdk/bin:${TRAVIS_BUILD_DIR}/vendor/bin:${PATH}
 
 matrix:
   include:
@@ -33,7 +32,7 @@ matrix:
     - php: 7.4
 
 before_install:
-  - composer global require phpunit/phpunit:^5.7 google/cloud-tools:dev-master
+  - composer require phpunit/phpunit:^5.7 google/cloud-tools:dev-master
   - dump_credentials.php
   - install_test_deps.sh --gcloud
   - if [ "$RUN_CS_FIXER" = "true" ]; then install_test_deps.sh --cs-fixer; fi
@@ -45,6 +44,6 @@ script:
 # Run the tests in each of the sample directories
 - scripts/run_tests.sh
 
-after_success:
-  - composer global require "php-coveralls/php-coveralls:^2.1"
-  - travis_retry php-coveralls -v
+# after_success:
+  # - composer global require "php-coveralls/php-coveralls:^2.1"
+  # - travis_retry php-coveralls -v
