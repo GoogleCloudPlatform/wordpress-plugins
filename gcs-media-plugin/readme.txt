@@ -2,8 +2,8 @@
 Contributors: google
 Tags: google, Google Cloud Storage
 Requires at least: 3
-Stable tag: 0.1.5
-Tested up to: 5.2
+Stable tag: 0.1.6
+Tested up to: 5.5
 Requires PHP: 5.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -75,6 +75,9 @@ Q. How to configure the default ACL on my Google Cloud Storage bucket?
 A. See: https://wordpress.org/support/topic/google-storage-not-work/page/2/#post-8897852
 
 == Changelog ==
+
+= 0.1.6 =
+* Updates all dependencies
 
 = 0.1.5 =
 * Updates all dependencies
